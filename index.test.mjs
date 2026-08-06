@@ -236,3 +236,16 @@ test('times out an SSH connection', async () => {
   await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', connectTimeout: 1, ClientClass: ClientMock }))
     .rejects.toMatchObject({ code: 'SSH_TIMEOUT' });
 });
+
+test('does not end an already-ended connection on exec error', async () => {
+  const client = { ended: false };
+  class ClientMock {
+    on(event, cb) { this.handlers ??= {}; this.handlers[event] = cb; return this; }
+    connect() { this.handlers.ready(); return this; }
+    exec(_command, cb) { this.handlers.end(); cb(new Error('late exec')); }
+    end() { client.ended = true; }
+  }
+  await expect(sshExec({ host: 'x', commands: ['fail'], privateKey: 'KEY', ClientClass: ClientMock }))
+    .rejects.toMatchObject({ code: 'SSH_EXEC' });
+  expect(client.ended).toBe(false);
+});

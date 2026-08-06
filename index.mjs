@@ -26,7 +26,7 @@ export async function sshExec({
   const key = await loadKey({ privateKey, privateKeyPath, fsLib, homedirFn });
   return await new Promise((resolve, reject) => {
     const conn = new ClientClass(); const results = []; let i = 0; let ended = false; let connectTimer;
-    const finish = (error) => { clearTimeout(connectTimer); if (error) { /* istanbul ignore else -- errors terminate before normal completion */ if (!ended) conn.end(); reject(error); } else { ended = true; conn.end(); resolve(results); } };
+    const finish = (error) => { clearTimeout(connectTimer); if (error) { if (!ended) conn.end(); reject(error); } else { ended = true; conn.end(); resolve(results); } };
     const runNext = () => {
       if (i >= commands.length) return finish();
       const command = commands[i++]; let stdout = ''; let stderr = ''; let timer;
