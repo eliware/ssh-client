@@ -27,3 +27,9 @@
 - Added separate stdout/stderr capture, output limits, working-directory, environment, PTY, and shell options.
 - Expanded command result metadata and TypeScript declarations.
 - Updated the example, project guidance, and tests with 100% coverage.
+
+## 1.1.5
+
+- Removed the remaining Istanbul coverage-ignore directive from command completion handling.
+- Added tests for connection termination and command execution error paths.
+- Preserved 100% statements, branches, functions, and lines coverage without ignore directives.
