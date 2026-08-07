@@ -27,6 +27,11 @@
 - Fully ESM compatible
 - Easily testable/mocked via dependency injection
 
+## Requirements
+
+- Node.js 26 or newer
+- An SSH server and private-key authentication
+
 ## Installation
 
 ```bash
@@ -55,24 +60,6 @@ for (const [i, { result, code }] of results.entries()) {
 }
 ```
 
-### CommonJS Example
-
-```js
-const {{ sshExec }} = require('@eliware/ssh-client');
-
-(async () => {
-  const results = await sshExec({
-    host: 'your.ssh.server',
-    username: 'youruser',
-    commands: ['echo Hello, SSH!', 'uname -a'],
-  });
-  for (const [i, { result, code }] of results.entries()) {
-    console.log(`Command #${i + 1} exit code: ${code}`);
-    console.log(result);
-  }
-})();
-```
-
 ## API
 
 ### sshExec(options)
@@ -93,6 +80,24 @@ Executes one or more commands on a remote SSH server using private key authentic
 #### Throws
 
 - If connection or authentication fails, or if no private key is found in `~/.ssh/`.
+
+## Errors / Troubleshooting
+
+`sshExec` validates the host, command list, and port before connecting. It throws `SshError` with codes for invalid options, missing keys, authentication failures, connection failures, connection timeouts, command failures, and command timeouts. Configure host verification with `hostVerifier` or `knownHosts`; do not weaken verification defaults in production.
+
+## Development
+
+```bash
+npm test
+npm run test:gaps
+npm run lint
+npm run typecheck
+npm run pack
+```
+
+## Security
+
+Treat private keys, passphrases, agents, host credentials, and command content as sensitive. Never commit keys or credentials. Prefer `knownHosts`/`hostVerifier`, limit command scope, and avoid logging command output containing secrets.
 
 ## TypeScript
 
