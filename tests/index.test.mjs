@@ -1,4 +1,4 @@
-import { sshExec } from './index.mjs';
+import { sshExec } from '../index.mjs';
 import { jest, test, expect } from '@jest/globals';
 
 test('throws if options are omitted', async () => {
