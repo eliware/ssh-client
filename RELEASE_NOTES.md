@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.1.6
+
+- Corrected package metadata formatting and dependency declarations.
+
 ## 1.1.2 — Current changes
 
 - Standardized Node.js 26 CI workflow.
