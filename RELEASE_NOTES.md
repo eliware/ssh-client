@@ -1,5 +1,12 @@
 # Release Notes
 
+## 1.1.8 — August 8, 2026
+
+- Fixed the connection timeout timer so it stops when SSH emits `ready`.
+- Prevented long-running commands from being misreported as connection timeouts.
+- Added regression coverage for commands that outlive `connectTimeout`.
+- Verification: tests, 100% coverage, gap check, lint, smoke test, and production audit pass.
+
 ## 1.1.7 — August 7, 2026
 
 - Aligned repository structure, package metadata, validation scripts, CI, documentation, and package contents with Eliware library conventions.
