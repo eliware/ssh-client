@@ -209,6 +209,20 @@ test('supports private key path and rejects invalid ports', async () => {
   await expect(promise).resolves.toEqual([]);
 });
 
+test('does not apply connection timeout after connection is ready', async () => {
+  class ClientMock {
+    on(event, cb) { if (event === 'ready') this.ready = cb; return this; }
+    connect() { this.ready(); return this; }
+    exec(_command, cb) {
+      const stream = { on(event, handler) { if (event === 'close') setTimeout(() => handler(0), 10); return this; }, stderr: { on() { return this; } } };
+      cb(null, stream);
+    }
+    end() {}
+  }
+  await expect(sshExec({ host: 'x', commands: ['slow'], privateKey: 'KEY', connectTimeout: 1, ClientClass: ClientMock }))
+    .resolves.toEqual([expect.objectContaining({ code: 0 })]);
+});
+
 test('times out a remote command', async () => {
   class ClientMock {
     on(event, cb) { if (event === 'ready') this.ready = cb; return this; }

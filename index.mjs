@@ -41,7 +41,8 @@ export async function sshExec({
       if (env || pty) conn.exec(fullCommand, { env, pty }, onExec); else conn.exec(fullCommand, onExec);
     };
     const handler = (err) => { if (ended) return; const code = err.level === 'client-authentication' ? 'SSH_AUTHENTICATION' : err.level === 'client-timeout' ? 'SSH_TIMEOUT' : 'SSH_CONNECTION'; finish(new SshError(`SSH ${code === 'SSH_AUTHENTICATION' ? 'authentication failed' : code === 'SSH_TIMEOUT' ? 'connection timed out' : 'connection error'}: ${err.message}`, code, err)); };
-    conn.on('ready', runNext).on('error', handler).on('end', () => { ended = true; }).on('close', () => { ended = true; });
+    const onReady = () => { clearTimeout(connectTimer); runNext(); };
+    conn.on('ready', onReady).on('error', handler).on('end', () => { ended = true; }).on('close', () => { ended = true; });
     connectTimer = setTimeout(() => handler({ level: 'client-timeout', message: 'connection timeout' }), connectTimeout);
     conn.connect({ host, port, username, privateKey: key, passphrase, agent, hostVerifier, knownHosts, readyTimeout: connectTimeout, shell });
   });
