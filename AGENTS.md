@@ -33,3 +33,7 @@ command is required.
 - Add focused tests for new options and error paths.
 - Do not run release/tag tooling unless explicitly requested.
 - Keep commits focused and use descriptive commit messages.
+- Do not over-engineer simple tasks.
+- Do not guess when confused.
+- Do not make random, pointless changes.
+- Check your own work before saying you're done.
