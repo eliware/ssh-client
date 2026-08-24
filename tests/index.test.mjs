@@ -7,6 +7,21 @@ test('connect validates missing host through the public entry point', async () =
   await expect(connect()).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
 });
 
+test('connect falls back to USERNAME when USER is unavailable', async () => {
+  const user = process.env.USER;
+  const username = process.env.USERNAME;
+  delete process.env.USER;
+  process.env.USERNAME = 'test-user';
+  try {
+    await expect(connect()).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+  } finally {
+    if (user === undefined) delete process.env.USER;
+    else process.env.USER = user;
+    if (username === undefined) delete process.env.USERNAME;
+    else process.env.USERNAME = username;
+  }
+});
+
 test('throws if options are omitted', async () => {
   await expect(sshExec()).rejects.toThrow('host and commands[] are required');
 });
