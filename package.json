@@ -46,7 +46,7 @@
     },
     "homepage": "https://github.com/eliware/ssh-client#readme",
     "devDependencies": {
-        "@eliware/test": "^1.0.2",
+        "@eliware/test": "^1.0.3",
         "typescript": "^7.0.2"
     },
     "dependencies": {

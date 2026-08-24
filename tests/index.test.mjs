@@ -1,7 +1,11 @@
 import { jest, test, expect } from '@jest/globals';
 import '../index.mjs';
 
-import { sshExec } from '../index.mjs';
+import { connect, sshExec } from '../index.mjs';
+
+test('connect validates missing host through the public entry point', async () => {
+  await expect(connect()).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+});
 
 test('throws if options are omitted', async () => {
   await expect(sshExec()).rejects.toThrow('host and commands[] are required');
