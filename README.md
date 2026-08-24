@@ -6,6 +6,8 @@
 
 The implementation is organized into focused modules under `src/`; the root entry point remains the public compatibility barrel.
 
+CI validates ordinary `main` pushes and pull requests; npm publishing remains restricted to `v*` tags.
+
 Host certificate verification parses and verifies OpenSSH certificate wire data directly with `ssh2`; no external executable is required. It validates the CA signature, signing key, host principal, certificate type, validity interval, and revoked/negated host records. File transfers use SFTP (through `ssh2`), not the separate SCP protocol.
 
 ---
