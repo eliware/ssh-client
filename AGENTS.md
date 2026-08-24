@@ -19,7 +19,8 @@ Run before committing:
 ```bash
 npm test
 npm run lint
-npm run test:gaps
+npm run typecheck
+npm audit --omit=dev --audit-level=moderate
 ```
 
 Tests should maintain 100% statements, branches, functions, and lines coverage.

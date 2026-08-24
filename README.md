@@ -1,8 +1,12 @@
 # [![eliware.org](https://eliware.org/logos/brand.png)](https://discord.gg/M6aTR9eTwN)
 
-## @eliware/ssh-client [![npm version](https://img.shields.io/npm/v/@eliware/ssh-client.svg)](https://www.npmjs.com/package/@eliware/ssh-client)[![license](https://img.shields.io/github/license/eliware/ssh-client.svg)](LICENSE)[![build status](https://github.com/eliware/ssh-client/actions/workflows/nodejs.yml/badge.svg)](https://github.com/eliware/ssh-client/actions)
+## @eliware/ssh-client [![npm version](https://img.shields.io/npm/v/@eliware/ssh-client.svg)](https://www.npmjs.com/package/@eliware/ssh-client)[![license](https://img.shields.io/github/license/eliware/ssh-client.svg)](LICENSE)[![build status](https://github.com/eliware/ssh-client/actions/workflows/ci.yml/badge.svg)](https://github.com/eliware/ssh-client/actions)
 
-> A simple, ESM-first SSH client for Node.js with private key authentication and sequential command execution.
+> A simple, ESM-first SSH client for Node.js with key or password authentication and sequential command execution.
+
+The implementation is organized into focused modules under `src/`; the root entry point remains the public compatibility barrel.
+
+Host certificate verification parses and verifies OpenSSH certificate wire data directly with `ssh2`; no external executable is required. It validates the CA signature, signing key, host principal, certificate type, validity interval, and revoked/negated host records. File transfers use SFTP (through `ssh2`), not the separate SCP protocol.
 
 ---
 
@@ -12,7 +16,6 @@
 - [Installation](#installation)
 - [Usage](#usage)
   - [ESM Example](#esm-example)
-  - [CommonJS Example](#commonjs-example)
 - [API](#api)
 - [TypeScript](#typescript)
 - [License](#license)
@@ -20,7 +23,7 @@
 ## Features
 
 - Simple SSH command execution for Node.js
-- Private key authentication only (no password support)
+- Private-key and password authentication
 - Sequential execution of multiple commands in a single SSH session
 - Returns merged stdout/stderr and exit code for each command
 - TypeScript type definitions included
@@ -30,7 +33,7 @@
 ## Requirements
 
 - Node.js 26 or newer
-- An SSH server and private-key authentication
+- An SSH server and private-key or password authentication
 
 ## Installation
 
@@ -64,7 +67,7 @@ for (const [i, { result, code }] of results.entries()) {
 
 ### sshExec(options)
 
-Executes one or more commands on a remote SSH server using private key authentication.
+Executes one or more commands on a remote SSH server using private-key or password authentication.
 
 #### Parameters
 
@@ -72,6 +75,10 @@ Executes one or more commands on a remote SSH server using private key authentic
 - `port` (number): SSH port (default: 22)
 - `username` (string): SSH username (default: current user)
 - `commands` (string[]): List of commands to execute (required)
+- `privateKey` / `privateKeyPath` (string): Private-key credentials
+- `password` (string): Password credential for bootstrap or password-authenticated servers
+- `knownHosts` / `knownHostsPath` (string): OpenSSH known-host records
+- `hostCaPath` (string): Trusted OpenSSH host CA public key
 
 #### Returns
 
@@ -79,17 +86,20 @@ Executes one or more commands on a remote SSH server using private key authentic
 
 #### Throws
 
-- If connection or authentication fails, or if no private key is found in `~/.ssh/`.
+- If connection or authentication fails, or if required credentials are unavailable.
 
 ## Errors / Troubleshooting
 
 `sshExec` validates the host, command list, and port before connecting. It throws `SshError` with codes for invalid options, missing keys, authentication failures, connection failures, connection timeouts, command failures, and command timeouts. Configure host verification with `hostVerifier` or `knownHosts`; do not weaken verification defaults in production.
 
+### connect(options)
+
+Creates a reusable connection exposing `exec(commands)`, `shell({ onData, onInput })`, `upload(localPath, remotePath)`, `download(remotePath, localPath)`, and `close()`. Transfers use SFTP. Host certificates are verified against `@cert-authority` records or `hostCaPath`; certificate principals must include the requested host name or IP address.
+
 ## Development
 
 ```bash
 npm test
-npm run test:gaps
 npm run lint
 npm run typecheck
 npm run pack
@@ -109,6 +119,12 @@ export interface SshExecOptions {
   port?: number;
   username?: string;
   commands: string[];
+  privateKey?: string;
+  privateKeyPath?: string;
+  password?: string;
+  knownHosts?: string;
+  knownHostsPath?: string;
+  hostCaPath?: string;
 }
 
 export interface SshExecResult {
@@ -116,7 +132,16 @@ export interface SshExecResult {
   code: number;
 }
 
+export interface SshConnection {
+  exec(commands: string[]): Promise<SshExecResult[]>;
+  shell(options?: { onData?: (data: Buffer) => void; onInput?: (stream: any) => void }): Promise<any>;
+  upload(localPath: string, remotePath: string): Promise<void>;
+  download(remotePath: string, localPath: string): Promise<void>;
+  close(): Promise<void>;
+}
+
 export declare function sshExec(options: SshExecOptions): Promise<SshExecResult[]>;
+export declare function connect(options: Omit<SshExecOptions, 'commands'>): Promise<SshConnection>;
 ```
 
 ## Support

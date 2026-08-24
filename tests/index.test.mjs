@@ -1,17 +1,22 @@
-import { sshExec } from '../index.mjs';
 import { jest, test, expect } from '@jest/globals';
+import '../index.mjs';
+
+import { sshExec } from '../index.mjs';
 
 test('throws if options are omitted', async () => {
   await expect(sshExec()).rejects.toThrow('host and commands[] are required');
 });
 
+
 test('throws if host is missing', async () => {
   await expect(sshExec({ commands: ['echo hi'] })).rejects.toThrow('host and commands[] are required');
 });
 
+
 test('throws if commands is missing', async () => {
   await expect(sshExec({ host: 'localhost' })).rejects.toThrow('host and commands[] are required');
 });
+
 
 test('throws if no private key is found', async () => {
   // Inject fsLib and homedirFn to simulate missing private key
@@ -30,6 +35,7 @@ test('throws if no private key is found', async () => {
     homedirFn: mockHomedir,
   })).rejects.toThrow('No private key found in ~/.ssh/');
 });
+
 
 test('successful command execution (mocked)', async () => {
   const mockFs = { readFile: jest.fn().mockResolvedValue('PRIVATEKEY') };
@@ -77,6 +83,7 @@ test('successful command execution (mocked)', async () => {
   ]);
 });
 
+
 test('ssh exec error', async () => {
   const mockFs = { readFile: jest.fn().mockResolvedValue('PRIVATEKEY') };
   const mockHomedir = () => '/mockhome';
@@ -95,6 +102,7 @@ test('ssh exec error', async () => {
   })).rejects.toThrow('SSH exec error: execfail');
 });
 
+
 test('ssh connection error', async () => {
   const mockFs = { readFile: jest.fn().mockResolvedValue('PRIVATEKEY') };
   const mockHomedir = () => '/mockhome';
@@ -111,6 +119,7 @@ test('ssh connection error', async () => {
     homedirFn: mockHomedir,
   })).rejects.toThrow('SSH connection error: netfail');
 });
+
 
 test('ssh authentication error', async () => {
   const mockFs = { readFile: jest.fn().mockResolvedValue('PRIVATEKEY') };
@@ -129,6 +138,7 @@ test('ssh authentication error', async () => {
   })).rejects.toThrow('SSH authentication failed: bad auth');
 });
 
+
 test('ssh timeout error', async () => {
   const mockFs = { readFile: jest.fn().mockResolvedValue('PRIVATEKEY') };
   const mockHomedir = () => '/mockhome';
@@ -146,6 +156,7 @@ test('ssh timeout error', async () => {
   })).rejects.toThrow('SSH connection timed out: timeout');
 });
 
+
 test('handles connection end and close events', async () => {
   const mockFs = { readFile: jest.fn().mockResolvedValue('PRIVATEKEY') };
   class DummyClient {
@@ -162,6 +173,7 @@ test('handles connection end and close events', async () => {
     .resolves.toEqual([expect.objectContaining({ command: 'echo', stdout: '', stderr: '', result: '', code: 0 })]);
 });
 
+
 test('ignores connection close after completion', async () => {
   const mockFs = { readFile: jest.fn().mockResolvedValue('PRIVATEKEY') };
   class DummyClient {
@@ -174,6 +186,7 @@ test('ignores connection close after completion', async () => {
   await expect(sshExec({ host: 'localhost', commands: ['echo'], ClientClass: DummyClient, fsLib: mockFs, homedirFn: () => '/mockhome' })).resolves.toEqual([expect.objectContaining({ command: 'echo', code: 0 })]);
 });
 
+
 test('uses fallback username and default port', async () => {
   const originalUser = process.env.USER; const originalUsername = process.env.USERNAME;
   delete process.env.USER; process.env.USERNAME = 'fallback-user';
@@ -183,6 +196,7 @@ test('uses fallback username and default port', async () => {
   if (originalUser === undefined) delete process.env.USER; else process.env.USER = originalUser;
   if (originalUsername === undefined) delete process.env.USERNAME; else process.env.USERNAME = originalUsername;
 });
+
 
 test('supports explicit keys, cwd, env, pty, and connection options', async () => {
   const calls = [];
@@ -200,6 +214,7 @@ test('supports explicit keys, cwd, env, pty, and connection options', async () =
   expect(calls[1][1]).toContain("cd \"/tmp\"");
 });
 
+
 test('supports private key path and rejects invalid ports', async () => {
   const fsLib = { readFile: jest.fn().mockResolvedValue('KEY') };
   await expect(sshExec({ host: 'x', port: 0, commands: [] })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
@@ -208,6 +223,7 @@ test('supports private key path and rejects invalid ports', async () => {
   expect(fsLib.readFile).toHaveBeenCalledWith('/key', 'utf8');
   await expect(promise).resolves.toEqual([]);
 });
+
 
 test('does not apply connection timeout after connection is ready', async () => {
   class ClientMock {
@@ -223,6 +239,7 @@ test('does not apply connection timeout after connection is ready', async () => 
     .resolves.toEqual([expect.objectContaining({ code: 0 })]);
 });
 
+
 test('times out a remote command', async () => {
   class ClientMock {
     on(event, cb) { if (event === 'ready') this.ready = cb; return this; }
@@ -233,6 +250,7 @@ test('times out a remote command', async () => {
   await expect(sshExec({ host: 'x', commands: ['hang'], privateKey: 'KEY', commandTimeout: 1, ClientClass: ClientMock }))
     .rejects.toMatchObject({ code: 'SSH_COMMAND_TIMEOUT' });
 });
+
 
 test('caps output at maxOutput', async () => {
   class ClientMock {
@@ -245,11 +263,13 @@ test('caps output at maxOutput', async () => {
   expect(result.result.length).toBeLessThanOrEqual(4);
 });
 
+
 test('times out an SSH connection', async () => {
   class ClientMock { on() { return this; } connect() { return this; } end() {} }
   await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', connectTimeout: 1, ClientClass: ClientMock }))
     .rejects.toMatchObject({ code: 'SSH_TIMEOUT' });
 });
+
 
 test('does not end an already-ended connection on exec error', async () => {
   const client = { ended: false };

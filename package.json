@@ -1,11 +1,12 @@
 {
     "name": "@eliware/ssh-client",
     "type": "module",
-    "version": "1.1.8",
-    "description": "A simple, ESM-first SSH client for Node.js with private key authentication and sequential command execution.",
+    "version": "1.2.0",
+    "description": "A simple, ESM-first SSH client for Node.js with key or password authentication, host verification, transfers, and sequential command execution.",
     "types": "index.d.ts",
     "files": [
         "index.mjs",
+        "src",
         "index.d.ts",
         "README.md",
         "LICENSE",
@@ -18,9 +19,8 @@
         }
     },
     "scripts": {
-        "test": "npx --node-options=\"--experimental-vm-modules --no-warnings\" jest --detectOpenHandles --silent --coverage",
-        "test:gaps": "npm test 2>&1 | grep '|' | grep -vF '|     100 |      100 |     100 |     100 |'",
-        "lint": "npx oxlint .",
+        "test": "eliware-test",
+        "lint": "eliware-test --lint",
         "typecheck": "tsc --project tsconfig.json",
         "pack": "npm pack --dry-run"
     },
@@ -46,16 +46,8 @@
     },
     "homepage": "https://github.com/eliware/ssh-client#readme",
     "devDependencies": {
-        "jest": "^30.4.2",
+        "@eliware/test": "^1.0.2",
         "typescript": "^7.0.2"
-    },
-    "jest": {
-        "testEnvironment": "node",
-        "testMatch": [
-            "**/?(*.)+(spec|test).[jt]s?(x)",
-            "**/?(*.)+(spec|test).mjs",
-            "**/?(*.)+(spec|test).cjs"
-        ]
     },
     "dependencies": {
         "ssh2": "^1.16.0"

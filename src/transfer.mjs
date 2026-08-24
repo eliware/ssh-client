@@ -1,0 +1,2 @@
+export function upload(client,local,remote,mode=0o600){return new Promise((resolve,reject)=>client.sftp((error,sftp)=>error?reject(error):sftp.fastPut(local,remote,{mode},result=>{if(sftp.end)sftp.end();if(result)reject(result);else resolve()})))}
+export function download(client,remote,local){return new Promise((resolve,reject)=>client.sftp((error,sftp)=>error?reject(error):sftp.fastGet(remote,local,result=>{if(sftp.end)sftp.end();if(result)reject(result);else resolve()})))}

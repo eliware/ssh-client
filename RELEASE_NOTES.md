@@ -1,5 +1,15 @@
 # Release Notes
 
+## 1.2.0
+
+- Decomposed the implementation into focused single-responsibility modules under `src/`, with corresponding tests under `tests/`.
+- Added the reusable `connect()` API with sequential `exec()`, interactive `shell()`, SFTP `upload()`/`download()`, and `close()` operations while preserving `sshExec()` compatibility.
+- Added password authentication alongside private-key authentication.
+- Added configurable known-hosts loading and a shared OpenSSH verifier supporting exact, wildcard, negated, hashed, revoked, and `@cert-authority` entries.
+- Added direct cryptographic OpenSSH host-certificate verification, including signing CA matching, Ed25519/RSA/ECDSA signatures, host principals, validity intervals, and host-certificate type checks.
+- Added TypeScript declarations for the connection and host-verifier APIs.
+- Standardized test, lint, typecheck, packaging, audit, and cross-platform CI/release workflows; publishing is restricted to `v*` tags after Ubuntu and Windows validation.
+
 ## 1.1.8 — August 8, 2026
 
 - Fixed the connection timeout timer so it stops when SSH emits `ready`.
