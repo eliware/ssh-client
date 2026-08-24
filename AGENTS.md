@@ -24,6 +24,8 @@ npm audit --omit=dev --audit-level=moderate
 ```
 
 Tests should maintain 100% statements, branches, functions, and lines coverage.
+The `npm test` command includes coverage-gap enforcement; no separate gap-check
+command is required.
 
 ## Changes
 
