@@ -1,5 +1,10 @@
 # Release Notes
 
+## 2.0.0
+
+- Updated the shared `@eliware/test` development dependency to `2.0.0`.
+- Continued to enforce complete coverage and lint validation through the shared test tooling.
+
 ## 1.2.0
 
 - Decomposed the implementation into focused single-responsibility modules under `src/`, with corresponding tests under `tests/`.
