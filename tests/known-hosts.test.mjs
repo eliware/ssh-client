@@ -35,7 +35,7 @@ test('handles trusted, excluded, hashed, and malformed host records', async () =
   expect(await validVerifier(certificateFor('ssh-rsa', [Buffer.alloc(1), Buffer.alloc(1)], 'rsa-sha2-256'))).toBe(true);
   expect(await validVerifier(certificateFor('ssh-rsa', [Buffer.alloc(1), Buffer.alloc(1)], 'rsa-sha2-512'))).toBe(true);
   expect(await validVerifier(certificateFor('ecdsa-sha2-nistp256', [Buffer.alloc(1), Buffer.alloc(1)], 'ecdsa-sha2-nistp384'))).toBe(true);
-  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', ['vyos-test', 'vyos-test.purinton.us', 'router.example', '10.0.0.240']))).toBe(true);
+  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', ['host', 'host.example.test', 'router.example', '192.0.2.10']))).toBe(true);
   expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', 'other.example'))).toBe(false);
   expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', 'router.example', 1))).toBe(false);
   expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', 'router.example', 2, 9999999999))).toBe(false);
