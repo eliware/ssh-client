@@ -56,7 +56,8 @@ export async function connect(options = {}) {
       finish(new SshError('SSH connection timed out', 'SSH_TIMEOUT'));
     }, connectTimeout);
     client.once('ready', () => finish());
-    client.once('error', error => finish(new SshError(`SSH connection error: ${error.message}`, 'SSH_CONNECTION', error)));
+    const connectionError = error => finish(new SshError(`SSH connection error: ${error.message}`, 'SSH_CONNECTION', error));
+    client.on?.('error', connectionError) ?? client.once('error', connectionError);
     client.once('end', () => finish(new SshError('SSH connection ended before ready', 'SSH_CONNECTION')));
     client.once('close', () => finish(new SshError('SSH connection closed before ready', 'SSH_CONNECTION')));
     client.connect({ host, port, username, privateKey: key, passphrase, password, agent, hostVerifier, knownHosts, readyTimeout: connectTimeout, authTimeout: connectTimeout });
