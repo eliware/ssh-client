@@ -10,7 +10,8 @@ CI validates ordinary `main` pushes and pull requests; npm publishing remains re
 
 Host certificate verification parses and verifies OpenSSH certificate wire data when the transport exposes it; no external executable is required. It validates the CA signature, signing key, host principal, certificate type, validity interval, and revoked/negated host records. File transfers use SFTP (through `ssh2`), not the separate SCP protocol.
 
-Note: the current `ssh2` release does not support host-certificate algorithms. The default transport therefore rejects `hostCaPath` with `SSH_CERT_UNSUPPORTED`; CA-based connections require a certificate-capable custom transport until the project adopts one.
+The package uses the Eliware-maintained `@eliware/ssh2` transport for
+host-certificate algorithm negotiation.
 
 ---
 
@@ -122,10 +123,6 @@ connection, command, SFTP round-trip, and close; set
 does not expose `/tmp`. It is skipped when these explicit test-only variables
 are absent.
 
-For a transport that supports OpenSSH host certificates, set
-`SSH_CLIENT_INTEGRATION_TRANSPORT` to the absolute path of an ESM/CJS module
-exporting the compatible `ssh2` `Client` class. The default `ssh2` transport
-intentionally reports `SSH_CERT_UNSUPPORTED` when `hostCaPath` is used.
 Set `SSH_CLIENT_INTEGRATION_CERT` to the advertised certificate file as well
 to enable the direct signature-tampering and revocation regression checks.
 

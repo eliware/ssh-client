@@ -6,8 +6,8 @@
 - Hardened command execution validation and cleanup, including command/channel timeouts, bounded output, duration metadata, password forwarding, safe working-directory validation, and premature-close handling.
 - Hardened SFTP cleanup and standardized setup, transfer, and close errors.
 - Added regression coverage and synchronized README/TypeScript result documentation.
-- Corrected the asynchronous host-verifier callback contract so `ssh2` cannot accept a host before verification completes; certificate policy is now fail-closed when transport certificate data is unavailable.
-- Added an explicit `SSH_CERT_UNSUPPORTED` error when the default transport is asked to use `hostCaPath`.
+- Corrected the asynchronous host-verifier callback contract so the SSH transport cannot accept a host before verification completes.
+- Added certificate-capable transport support through the published `@eliware/ssh2` dependency, including real Ed25519 host-certificate negotiation.
 
 ## 2.0.0
 

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { homedir } from 'node:os';
 import { pathToFileURL } from 'node:url';
-import ssh2 from 'ssh2';
+import ssh2 from '@eliware/ssh2';
 import '../index.mjs';
 
 import { connect, createHostVerifier, sshExec } from '../index.mjs';

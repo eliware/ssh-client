@@ -1,7 +1,7 @@
 {
     "name": "@eliware/ssh-client",
     "type": "module",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "A simple, ESM-first SSH client for Node.js with key or password authentication, host verification, transfers, and sequential command execution.",
     "types": "index.d.ts",
     "files": [
@@ -50,6 +50,6 @@
         "typescript": "^7.0.2"
     },
     "dependencies": {
-        "ssh2": "^1.16.0"
+        "@eliware/ssh2": "1.17.0"
     }
 }
