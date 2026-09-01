@@ -115,6 +115,7 @@ or `SSH_CLIENT_INTEGRATION_PASSWORD`, plus either
 `SSH_CLIENT_INTEGRATION_KNOWN_HOSTS` or `SSH_CLIENT_INTEGRATION_CA`, then run
 `SSH_CLIENT_INTEGRATION=1 npm test`. The integration test performs a real
 connection, command, SFTP round-trip, and close; set
+`SSH_CLIENT_INTEGRATION_PORT` for a non-default disposable server and set
 `SSH_CLIENT_INTEGRATION_REMOTE_PATH` when the server is Windows or otherwise
 does not expose `/tmp`. It is skipped when these explicit test-only variables
 are absent.

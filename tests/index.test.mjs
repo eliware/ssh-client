@@ -315,6 +315,7 @@ const integrationTest = integrationReady ? test : test.skip;
 integrationTest('real SSH integration: verifies, executes, transfers, and closes', async () => {
   const options = {
     host: process.env.SSH_CLIENT_INTEGRATION_HOST,
+    port: Number(process.env.SSH_CLIENT_INTEGRATION_PORT || 22),
     username: process.env.SSH_CLIENT_INTEGRATION_USER,
     privateKeyPath: process.env.SSH_CLIENT_INTEGRATION_PRIVATE_KEY,
     password: process.env.SSH_CLIENT_INTEGRATION_PASSWORD,
