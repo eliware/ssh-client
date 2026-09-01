@@ -2,9 +2,12 @@ import { jest, test, expect } from '@jest/globals';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { homedir } from 'node:os';
+import { pathToFileURL } from 'node:url';
+import ssh2 from 'ssh2';
 import '../index.mjs';
 
-import { connect, sshExec } from '../index.mjs';
+import { connect, createHostVerifier, sshExec } from '../index.mjs';
 
 test('connect validates missing host through the public entry point', async () => {
   await expect(connect()).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
@@ -308,11 +311,15 @@ test('does not end an already-ended connection on exec error', async () => {
 
 const integrationReady = process.env.SSH_CLIENT_INTEGRATION === '1'
   && process.env.SSH_CLIENT_INTEGRATION_HOST
+  && process.env.SSH_CLIENT_INTEGRATION_USER
   && (process.env.SSH_CLIENT_INTEGRATION_PRIVATE_KEY || process.env.SSH_CLIENT_INTEGRATION_PASSWORD)
   && (process.env.SSH_CLIENT_INTEGRATION_KNOWN_HOSTS || process.env.SSH_CLIENT_INTEGRATION_CA);
 
 const integrationTest = integrationReady ? test : test.skip;
 integrationTest('real SSH integration: verifies, executes, transfers, and closes', async () => {
+  const transport = process.env.SSH_CLIENT_INTEGRATION_TRANSPORT
+    ? (await import(pathToFileURL(process.env.SSH_CLIENT_INTEGRATION_TRANSPORT))).default
+    : undefined;
   const options = {
     host: process.env.SSH_CLIENT_INTEGRATION_HOST,
     port: Number(process.env.SSH_CLIENT_INTEGRATION_PORT || 22),
@@ -321,6 +328,7 @@ integrationTest('real SSH integration: verifies, executes, transfers, and closes
     password: process.env.SSH_CLIENT_INTEGRATION_PASSWORD,
     knownHostsPath: process.env.SSH_CLIENT_INTEGRATION_KNOWN_HOSTS,
     hostCaPath: process.env.SSH_CLIENT_INTEGRATION_CA,
+    ClientClass: transport,
   };
   const client = await connect(options);
   const source = join(await fs.mkdtemp(join(tmpdir(), 'ssh-client-integration-')), 'source.txt');
@@ -339,4 +347,33 @@ integrationTest('real SSH integration: verifies, executes, transfers, and closes
     await fs.rm(source, { force: true });
     await fs.rm(copy, { force: true });
   }
+});
+
+integrationTest('real SSH certificate policy rejects tampering and revocation', async () => {
+  const certPath = process.env.SSH_CLIENT_INTEGRATION_CERT;
+  if (!certPath || !process.env.SSH_CLIENT_INTEGRATION_CA) return;
+  const encoded = (await fs.readFile(certPath, 'utf8')).trim().split(/\s+/)[1];
+  const valid = Buffer.from(encoded, 'base64');
+  const invalid = Buffer.from(valid);
+  invalid[invalid.length - 1] ^= 1;
+  const verifier = createHostVerifier({
+    host: process.env.SSH_CLIENT_INTEGRATION_HOST,
+    port: Number(process.env.SSH_CLIENT_INTEGRATION_PORT || 22),
+    hostCaPath: process.env.SSH_CLIENT_INTEGRATION_CA,
+    fsLib: fs,
+    homedirFn: homedir,
+    utils: ssh2.utils,
+  });
+  expect(await verifier(valid)).toBe(true);
+  expect(await verifier(invalid)).toBe(false);
+  const revoked = createHostVerifier({
+    host: process.env.SSH_CLIENT_INTEGRATION_HOST,
+    port: Number(process.env.SSH_CLIENT_INTEGRATION_PORT || 22),
+    knownHosts: `@revoked ${process.env.SSH_CLIENT_INTEGRATION_HOST} ssh-ed25519 key`,
+    hostCaPath: process.env.SSH_CLIENT_INTEGRATION_CA,
+    fsLib: fs,
+    homedirFn: homedir,
+    utils: ssh2.utils,
+  });
+  expect(await revoked(valid)).toBe(false);
 });
