@@ -70,10 +70,14 @@ export function dateValid(value, now = new Date()) { if (!value) return false; c
 export function createHostVerifier({ host, port = 22, knownHosts, knownHostsPath, hostCaPath, fsLib, homedirFn, utils } = {}) {
   if (!host || (!knownHosts && !knownHostsPath && !hostCaPath)) return () => false;
   const hosts = [host, `[${host}]:${port}`];
-  return async (key, callback) => { let accepted = false; try {
+  return (key, callback) => {
+    const verification = (async () => { let accepted = false; try {
     const text = knownHosts ?? (knownHostsPath ? await fsLib.readFile(expandPath(knownHostsPath, homedirFn), 'utf8') : ''); const raw = Buffer.from(key); let cert; try { cert = certificate(raw); } catch { cert = null; } const actual = cert ? null : utils.parseKey(key); const authorities = [];
     /* istanbul ignore next 2 -- the parser's short-circuit guards are exercised through the integration cases above. */
-    for (const line of text.split(/\r?\n/)) { const fields = line.trim().split(/\s+/); if (fields.length < 3 || fields[0].startsWith('#')) continue; const marked = fields[0].startsWith('@'); const marker = marked ? fields[0] : ''; const patterns = (marked ? fields[1] : fields[0]).split(','); if (patterns.some(pattern => pattern.startsWith('!') && matches(pattern.slice(1), hosts))) return callback?.(false) ?? false; if (marker === '@revoked' && patterns.some(pattern => matches(pattern, hosts))) return callback?.(false) ?? false; if (marker === '@cert-authority') { if (patterns.some(pattern => matches(pattern, hosts))) authorities.push(fields.slice(2).join(' ')); continue; } if (actual && patterns.some(pattern => matches(pattern, hosts))) { try { accepted ||= utils.parseKey(`${marked ? fields[2] : fields[1]} ${marked ? fields[3] : fields[2]}`).getPublicSSH().equals(actual); } catch {} } }
+    for (const line of text.split(/\r?\n/)) { const fields = line.trim().split(/\s+/); if (fields.length < 3 || fields[0].startsWith('#')) continue; const marked = fields[0].startsWith('@'); const marker = marked ? fields[0] : ''; const patterns = (marked ? fields[1] : fields[0]).split(','); if (patterns.some(pattern => pattern.startsWith('!') && matches(pattern.slice(1), hosts))) return false; if (marker === '@revoked' && patterns.some(pattern => matches(pattern, hosts))) return false; if (marker === '@cert-authority') { if (patterns.some(pattern => matches(pattern, hosts))) authorities.push(fields.slice(2).join(' ')); continue; } if (actual && patterns.some(pattern => matches(pattern, hosts))) { try { accepted ||= utils.parseKey(`${marked ? fields[2] : fields[1]} ${marked ? fields[3] : fields[2]}`).getPublicSSH().equals(actual); } catch {} } }
     const trusted = [...authorities, ...(hostCaPath ? [await fsLib.readFile(expandPath(hostCaPath, homedirFn), 'utf8')] : [])]; if (!accepted && cert) accepted = trusted.some(ca => verifyCertificate(cert, ca.trim(), utils, host));
-  } catch {} callback?.(accepted); return accepted; };
+  } catch {} return accepted; })();
+    if (callback) { verification.then(callback); return undefined; }
+    return verification;
+  };
 }

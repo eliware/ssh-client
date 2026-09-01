@@ -8,7 +8,9 @@ The implementation is organized into focused modules under `src/`; the root entr
 
 CI validates ordinary `main` pushes and pull requests; npm publishing remains restricted to `v*` tags.
 
-Host certificate verification parses and verifies OpenSSH certificate wire data directly with `ssh2`; no external executable is required. It validates the CA signature, signing key, host principal, certificate type, validity interval, and revoked/negated host records. File transfers use SFTP (through `ssh2`), not the separate SCP protocol.
+Host certificate verification parses and verifies OpenSSH certificate wire data when the transport exposes it; no external executable is required. It validates the CA signature, signing key, host principal, certificate type, validity interval, and revoked/negated host records. File transfers use SFTP (through `ssh2`), not the separate SCP protocol.
+
+Note: the current `ssh2` release presents the underlying raw host key to its `hostVerifier` callback even when OpenSSH negotiates a host certificate. CA-based connections therefore fail closed until the transport exposes the certificate wire data (or the project adopts a transport that does).
 
 ---
 

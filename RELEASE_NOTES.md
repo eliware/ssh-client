@@ -6,6 +6,7 @@
 - Hardened command execution validation and cleanup, including command/channel timeouts, bounded output, duration metadata, password forwarding, safe working-directory validation, and premature-close handling.
 - Hardened SFTP cleanup and standardized setup, transfer, and close errors.
 - Added regression coverage and synchronized README/TypeScript result documentation.
+- Corrected the asynchronous host-verifier callback contract so `ssh2` cannot accept a host before verification completes; certificate policy is now fail-closed when transport certificate data is unavailable.
 
 ## 2.0.0
 

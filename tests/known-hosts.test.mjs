@@ -6,14 +6,15 @@ test('handles trusted, excluded, hashed, and malformed host records', async () =
   const utils = { parseKey: value => value === 'ssh-test key' || value === 'actual' ? { getPublicSSH: () => actual } : { getPublicSSH: () => ({ equals: () => false }) } };
   const callback = jest.fn();
   const trusted = createHostVerifier({ host: 'router.example', knownHosts: 'router.example ssh-test key\nmalformed', utils });
-  expect(await trusted('actual', callback)).toBe(true);
+  expect(await trusted('actual', callback)).toBeUndefined(); await Promise.resolve();
   const excluded = createHostVerifier({ host: 'router.example', knownHosts: '!router.example,*.example ssh-test key', utils });
   expect(await excluded('actual')).toBe(false);
   const revoked = createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example ssh-test key', utils });
   expect(await revoked('actual')).toBe(false);
-  expect(await revoked('actual', () => true)).toBe(true);
-  expect(await createHostVerifier({ host: 'router.example', knownHosts: '!router.example ssh-test key', utils })('actual', () => true)).toBe(true);
+  const revokedCallback = jest.fn(); expect(await revoked('actual', revokedCallback)).toBeUndefined(); await Promise.resolve(); expect(revokedCallback).toHaveBeenCalledWith(false);
+  const excludedCallback = jest.fn(); expect(await createHostVerifier({ host: 'router.example', knownHosts: '!router.example ssh-test key', utils })('actual', excludedCallback)).toBeUndefined(); await Promise.resolve(); expect(excludedCallback).toHaveBeenCalledWith(false);
   expect(callback).toHaveBeenCalledWith(true);
+  const failedCallback = jest.fn(); const failing = createHostVerifier({ host: 'router.example', hostCaPath: '/missing', fsLib: { readFile: async () => { throw Error('missing'); } }, homedirFn: () => '/home', utils }); expect(failing('actual', failedCallback)).toBeUndefined(); await new Promise(resolve => setTimeout(resolve, 0)); expect(failedCallback).toHaveBeenCalledWith(false);
   const salt = Buffer.from('salt').toString('base64'); const digest = createHmac('sha1', Buffer.from('salt')).update('router.example').digest('base64');
   const hashed = createHostVerifier({ host: 'router.example', knownHosts: `|1|${salt}|${digest} ssh-test key`, utils }); expect(await hashed('actual')).toBe(true);
   const caFs = { mkdtemp: async () => '/tmp', writeFile: async () => {}, readFile: async () => 'ssh-ed25519 key', rm: async () => {} }; const ca = createHostVerifier({ host: 'router.example', hostCaPath: '/ca', fsLib: caFs, homedirFn: () => '/home', utils, runCommand: async () => ({ stdout: 'Type: ssh-ed25519-cert-v01@openssh.com\nkey' }) }); expect(await ca('actual')).toBe(false);
