@@ -84,7 +84,7 @@ Executes one or more commands on a remote SSH server using private-key or passwo
 
 #### Returns
 
-- `Promise<Array<{ result: string, code: number }>>`: Resolves to an array of results for each command, with merged stdout/stderr and exit code.
+- `Promise<Array<{ command: string, stdout: string, stderr: string, result: string, code: number, signal?: string, duration: number }>>`: Resolves sequentially with separate output streams, merged output, exit status, and duration in milliseconds.
 
 #### Throws
 
@@ -93,6 +93,8 @@ Executes one or more commands on a remote SSH server using private-key or passwo
 ## Errors / Troubleshooting
 
 `sshExec` validates the host, command list, and port before connecting. It throws `SshError` with codes for invalid options, missing keys, authentication failures, connection failures, connection timeouts, command failures, and command timeouts. Configure host verification with `hostVerifier` or `knownHosts`; do not weaken verification defaults in production.
+
+`maxOutput` must be a positive number. `cwd` is restricted to a shell-safe cross-platform character set because it is applied through the remote shell; paths containing shell metacharacters are rejected. `commandTimeout` covers opening and executing each command channel and closes the SSH connection when it expires. An empty command list is a supported connectivity check and returns an empty array.
 
 ### connect(options)
 
@@ -106,6 +108,16 @@ npm run lint
 npm run typecheck
 npm run pack
 ```
+
+For real-server integration coverage, provide `SSH_CLIENT_INTEGRATION_HOST`,
+`SSH_CLIENT_INTEGRATION_USER`, and either `SSH_CLIENT_INTEGRATION_PRIVATE_KEY`
+or `SSH_CLIENT_INTEGRATION_PASSWORD`, plus either
+`SSH_CLIENT_INTEGRATION_KNOWN_HOSTS` or `SSH_CLIENT_INTEGRATION_CA`, then run
+`SSH_CLIENT_INTEGRATION=1 npm test`. The integration test performs a real
+connection, command, SFTP round-trip, and close; set
+`SSH_CLIENT_INTEGRATION_REMOTE_PATH` when the server is Windows or otherwise
+does not expose `/tmp`. It is skipped when these explicit test-only variables
+are absent.
 
 ## Security
 

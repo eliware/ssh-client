@@ -4,8 +4,9 @@ import { expandPath } from './paths.mjs';
 const CERT_SUFFIX = '-cert-v01@openssh.com';
 const MAX_TIME = 0xffffffffffffffffn;
 
+// Escape literal pattern characters while retaining only OpenSSH's * and ? wildcards.
 function wildcard(pattern, value) {
-  const expression = `^${pattern.replace(/[.+^${}()|[\\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`;
+  const expression = `^${pattern.replace(/[\\^$.[\]{}()+|]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`;
   return new RegExp(expression).test(value);
 }
 function matches(pattern, hosts) {
@@ -51,6 +52,7 @@ function certificate(key) {
   return { typeText, base, kind: kind.value, after: after.value, before: before.value, principals: principals(principalField.value), signed, signingKey: signingKey.value, signature: signature.value };
 }
 /* istanbul ignore next -- exercised by the end-to-end host-verifier path. */
+// Intentional: malformed certificates and unavailable trust material fail closed as a rejected host.
 function verifyCertificate(cert, caText, utils, host, now = BigInt(Math.floor(Date.now() / 1000))) {
   /* istanbul ignore next 3 -- the CA parser is exercised through the verifier's public callback. */
   const ca = utils.parseKey(caText); if (!ca?.verify || !ca?.getPublicSSH) return false;

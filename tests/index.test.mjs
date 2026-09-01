@@ -1,4 +1,7 @@
 import { jest, test, expect } from '@jest/globals';
+import { promises as fs } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import '../index.mjs';
 
 import { connect, sshExec } from '../index.mjs';
@@ -301,4 +304,38 @@ test('does not end an already-ended connection on exec error', async () => {
   await expect(sshExec({ host: 'x', commands: ['fail'], privateKey: 'KEY', ClientClass: ClientMock }))
     .rejects.toMatchObject({ code: 'SSH_EXEC' });
   expect(client.ended).toBe(false);
+});
+
+const integrationReady = process.env.SSH_CLIENT_INTEGRATION === '1'
+  && process.env.SSH_CLIENT_INTEGRATION_HOST
+  && (process.env.SSH_CLIENT_INTEGRATION_PRIVATE_KEY || process.env.SSH_CLIENT_INTEGRATION_PASSWORD)
+  && (process.env.SSH_CLIENT_INTEGRATION_KNOWN_HOSTS || process.env.SSH_CLIENT_INTEGRATION_CA);
+
+const integrationTest = integrationReady ? test : test.skip;
+integrationTest('real SSH integration: verifies, executes, transfers, and closes', async () => {
+  const options = {
+    host: process.env.SSH_CLIENT_INTEGRATION_HOST,
+    username: process.env.SSH_CLIENT_INTEGRATION_USER,
+    privateKeyPath: process.env.SSH_CLIENT_INTEGRATION_PRIVATE_KEY,
+    password: process.env.SSH_CLIENT_INTEGRATION_PASSWORD,
+    knownHostsPath: process.env.SSH_CLIENT_INTEGRATION_KNOWN_HOSTS,
+    hostCaPath: process.env.SSH_CLIENT_INTEGRATION_CA,
+  };
+  const client = await connect(options);
+  const source = join(await fs.mkdtemp(join(tmpdir(), 'ssh-client-integration-')), 'source.txt');
+  const copy = `${source}.copy`;
+  const remote = process.env.SSH_CLIENT_INTEGRATION_REMOTE_PATH || `/tmp/ssh-client-${Date.now()}.txt`;
+  await fs.writeFile(source, 'ssh-client integration\n');
+  try {
+    const [result] = await client.exec(['echo integration']);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain('integration');
+    await client.upload(source, remote);
+    await client.download(remote, copy);
+    expect(await fs.readFile(copy, 'utf8')).toBe('ssh-client integration\n');
+  } finally {
+    await client.close();
+    await fs.rm(source, { force: true });
+    await fs.rm(copy, { force: true });
+  }
 });

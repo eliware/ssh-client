@@ -1,5 +1,12 @@
 # Release Notes
 
+## Unreleased
+
+- Hardened reusable connection lifecycle handling, including validated ports and timeouts, early-close errors, timeout cleanup, and idempotent `close()`.
+- Hardened command execution validation and cleanup, including command/channel timeouts, bounded output, duration metadata, password forwarding, safe working-directory validation, and premature-close handling.
+- Hardened SFTP cleanup and standardized setup, transfer, and close errors.
+- Added regression coverage and synchronized README/TypeScript result documentation.
+
 ## 2.0.0
 
 - Updated the shared `@eliware/test` development dependency to `2.0.0`.
