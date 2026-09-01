@@ -38,6 +38,7 @@ export async function connect(options = {}) {
   if (!host) throw new SshError('host is required', 'SSH_INVALID_OPTIONS');
   if (!validPort(port)) throw new SshError('port must be valid', 'SSH_INVALID_OPTIONS');
   if (!Number.isFinite(connectTimeout) || connectTimeout <= 0) throw new SshError('connectTimeout must be positive', 'SSH_INVALID_OPTIONS');
+  if (hostCaPath && ClientClass === Client) throw new SshError('default ssh2 transport does not support host certificates', 'SSH_CERT_UNSUPPORTED');
   const key = password === undefined ? await loadKey({ privateKey, privateKeyPath, fsLib, homedirFn }) : undefined;
   const hostVerifier = options.hostVerifier || ((knownHosts || knownHostsPath || hostCaPath)
     ? createHostVerifier({ host, port, knownHosts, knownHostsPath, hostCaPath, fsLib, homedirFn, utils })

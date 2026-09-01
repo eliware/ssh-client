@@ -28,6 +28,7 @@ export async function sshExec(options = {}) {
     knownHostsPath, hostCaPath,
   } = options;
   validateOptions({ host, port, commands, maxOutput, cwd, connectTimeout, commandTimeout });
+  if (hostCaPath && ClientClass === Client) throw new SshError('default ssh2 transport does not support host certificates', 'SSH_CERT_UNSUPPORTED');
   const key = await loadKey({ privateKey, privateKeyPath, fsLib, homedirFn });
   const verifier = hostVerifier || ((knownHosts || knownHostsPath || hostCaPath)
     ? createHostVerifier({ host, port, knownHosts, knownHostsPath, hostCaPath, fsLib, homedirFn, utils })

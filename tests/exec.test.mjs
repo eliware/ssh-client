@@ -9,6 +9,7 @@ test('exec rejects invalid command values and output limits', async () => {
   await expect(sshExec({ host: 'x', commands: ['ok'], connectTimeout: 0, privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: ['ok'], commandTimeout: -1, privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: ['ok'], cwd: 'safe; whoami', privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+  await expect(sshExec({ host: 'x', commands: ['ok'], hostCaPath: '/ca', privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_CERT_UNSUPPORTED' });
 });
 
 test('rejects a premature connection close while executing', async () => {

@@ -7,6 +7,7 @@
 - Hardened SFTP cleanup and standardized setup, transfer, and close errors.
 - Added regression coverage and synchronized README/TypeScript result documentation.
 - Corrected the asynchronous host-verifier callback contract so `ssh2` cannot accept a host before verification completes; certificate policy is now fail-closed when transport certificate data is unavailable.
+- Added an explicit `SSH_CERT_UNSUPPORTED` error when the default transport is asked to use `hostCaPath`.
 
 ## 2.0.0
 

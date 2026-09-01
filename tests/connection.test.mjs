@@ -44,5 +44,8 @@ test('keeps a reusable connection open after successful exec', async () => {
   await expect(client.exec(['echo ok'])).resolves.toHaveLength(1);
   expect(client.raw.ended).toBeUndefined();
 });
+test('reports unsupported host certificates on the default transport', async () => {
+  await expect(connect({ host: 'router', hostCaPath: '/ca' })).rejects.toMatchObject({ code: 'SSH_CERT_UNSUPPORTED' });
+});
 
 
