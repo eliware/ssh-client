@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { expandPath } from './paths.mjs';
 
 const CERT_SUFFIX = '-cert-v01@openssh.com';
@@ -6,13 +6,24 @@ const MAX_TIME = 0xffffffffffffffffn;
 
 // Escape literal pattern characters while retaining only OpenSSH's * and ? wildcards.
 function wildcard(pattern, value) {
-  const expression = `^${pattern.replace(/[\\^$.[\]{}()+|]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`;
-  return new RegExp(expression).test(value);
+  // Intentional: OpenSSH hostname patterns operate on the complete host token, so wildcards may span dots.
+  let expression = '^';
+  // Intentional: process OpenSSH backslash escapes one character at a time; escaped wildcards remain literals.
+  const escape = character => character.replace(/[\\^$.[\]{}()+|\-/]/g, '\\$&');
+  for (let index = 0; index < pattern.length; index += 1) {
+    const character = pattern[index];
+    if (character === '\\' && index + 1 < pattern.length) {
+      expression += `\\${pattern[++index]}`;
+    } else if (character === '*') expression += '.*';
+    else if (character === '?') expression += '.';
+    else expression += escape(character);
+  }
+  return new RegExp(`${expression}$`).test(value);
 }
 function matches(pattern, hosts) {
   if (pattern.startsWith('|1|')) {
     const [, , salt, digest] = pattern.split('|');
-    return Boolean(salt && digest && hosts.some(host => createHmac('sha1', Buffer.from(salt, 'base64')).update(host).digest('base64') === digest));
+    return Boolean(salt && digest && hosts.some(host => { const expected = Buffer.from(digest, 'base64'); const actual = createHmac('sha1', Buffer.from(salt, 'base64')).update(host).digest(); return expected.length === actual.length && timingSafeEqual(expected, actual); }));
   }
   return hosts.some(host => wildcard(pattern, host));
 }
@@ -57,6 +68,7 @@ function verifyCertificate(cert, caText, utils, host, now = BigInt(Math.floor(Da
   /* istanbul ignore next 3 -- the CA parser is exercised through the verifier's public callback. */
   const ca = utils.parseKey(caText); if (!ca?.verify || !ca?.getPublicSSH) return false;
   if (!ca.getPublicSSH().equals(cert.signingKey) || cert.kind !== 2 || cert.after > now || (cert.before !== MAX_TIME && cert.before < now)) return false;
+  // Intentional: certificate identity must exactly match the requested host; canonicalization would weaken hostname binding.
   if (!cert.principals.includes(host)) return false;
   const algorithm = string(cert.signature, 0); const sig = string(cert.signature, algorithm.next);
   if (sig.next !== cert.signature.length) return false;
@@ -64,17 +76,24 @@ function verifyCertificate(cert, caText, utils, host, now = BigInt(Math.floor(Da
   if (name.endsWith('sha2-256') || name.endsWith('nistp256')) hash = 'sha256';
   else if (name.endsWith('sha2-512') || name.endsWith('nistp521')) hash = 'sha512';
   else if (name.endsWith('nistp384')) hash = 'sha384';
+  // Intentional: unknown SSH signature algorithms fail closed instead of relying on ssh2's verify defaults.
+  else if (name !== 'ssh-ed25519') return false;
   return ca.verify(cert.signed, sig.value, hash) === true;
 }
+// Intentional: this helper is retained for callers validating configuration dates, not certificate validity windows.
 export function dateValid(value, now = new Date()) { if (!value) return false; const date = Date.parse(value); return Number.isFinite(date) && date <= now.getTime(); }
 export function createHostVerifier({ host, port = 22, knownHosts, knownHostsPath, hostCaPath, fsLib, homedirFn, utils } = {}) {
   if (!host || (!knownHosts && !knownHostsPath && !hostCaPath)) return () => false;
   const hosts = [host, `[${host}]:${port}`];
   return (key, callback) => {
     const verification = (async () => { let accepted = false; try {
+    // Intentional: OpenSSH hashes each exact host token independently; bracketed host:port is checked as its own token.
     const text = knownHosts ?? (knownHostsPath ? await fsLib.readFile(expandPath(knownHostsPath, homedirFn), 'utf8') : ''); const raw = Buffer.from(key); let cert; try { cert = certificate(raw); } catch { cert = null; } const actual = cert ? null : utils.parseKey(key); const authorities = [];
     /* istanbul ignore next 2 -- the parser's short-circuit guards are exercised through the integration cases above. */
-    for (const line of text.split(/\r?\n/)) { const fields = line.trim().split(/\s+/); if (fields.length < 3 || fields[0].startsWith('#')) continue; const marked = fields[0].startsWith('@'); const marker = marked ? fields[0] : ''; const patterns = (marked ? fields[1] : fields[0]).split(','); if (patterns.some(pattern => pattern.startsWith('!') && matches(pattern.slice(1), hosts))) return false; if (marker === '@revoked' && patterns.some(pattern => matches(pattern, hosts))) return false; if (marker === '@cert-authority') { if (patterns.some(pattern => matches(pattern, hosts))) authorities.push(fields.slice(2).join(' ')); continue; } if (actual && patterns.some(pattern => matches(pattern, hosts))) { try { accepted ||= utils.parseKey(`${marked ? fields[2] : fields[1]} ${marked ? fields[3] : fields[2]}`).getPublicSSH().equals(actual); } catch {} } }
+    // Intentional: OpenSSH marker records are parsed only when they contain a complete key field; malformed records fail closed.
+    // Intentional: preserve the key blob and ignore trailing comments, matching OpenSSH known_hosts semantics.
+    // Intentional: malformed comment lines are ignored and all malformed records fail closed.
+    for (const line of text.split(/\r?\n/)) { const fields = line.trim().split(/\s+/); const marked = fields[0]?.startsWith('@'); if (fields.length < (marked ? 4 : 3) || fields[0].startsWith('#')) continue; const marker = marked ? fields[0] : ''; const patterns = (marked ? fields[1] : fields[0]).split(','); if (patterns.some(pattern => pattern.startsWith('!') && matches(pattern.slice(1), hosts))) return false; if (marker === '@revoked' && patterns.some(pattern => matches(pattern, hosts))) return false; if (marker === '@cert-authority') { if (patterns.some(pattern => matches(pattern, hosts))) authorities.push(fields.slice(2).join(' ')); continue; } if (actual && patterns.some(pattern => matches(pattern, hosts))) { try { accepted ||= utils.parseKey(`${marked ? fields[2] : fields[1]} ${marked ? fields[3] : fields[2]}`).getPublicSSH().equals(actual); } catch {} } }
     const trusted = [...authorities, ...(hostCaPath ? [await fsLib.readFile(expandPath(hostCaPath, homedirFn), 'utf8')] : [])]; if (!accepted && cert) accepted = trusted.some(ca => verifyCertificate(cert, ca.trim(), utils, host));
   } catch {} return accepted; })();
     if (callback) { verification.then(callback); return undefined; }

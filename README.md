@@ -183,3 +183,6 @@ For help, questions, or to chat with the author and community, visit:
 - [GitHub](https://github.com/eliware/ssh-client)
 - [npm](https://www.npmjs.com/package/@eliware/ssh-client)
 - [Discord](https://discord.gg/M6aTR9eTwN)
+### Remote environment fallback
+
+Pass `env` to request SSH environment variables. If the target SSH daemon does not accept `AcceptEnv`, also set `envFallback` to `posix`, `powershell`, or `cmd`; the library safely initializes those variables in the remote shell.

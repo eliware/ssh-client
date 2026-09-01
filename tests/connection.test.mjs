@@ -31,6 +31,52 @@ test('rejects when the transport ends before ready', async () => {
   }
   await expect(connect({ host: 'router', privateKey: 'KEY', ClientClass: EndingClient })).rejects.toMatchObject({ code: 'SSH_CONNECTION' });
 });
+test('rejects when client construction throws', async () => {
+  await expect(connect({ host: 'router', privateKey: 'KEY', ClientClass: class { constructor() { throw Error('construct'); } } })).rejects.toMatchObject({ code: 'SSH_CONNECTION' });
+});
+test('rejects when the transport connect call throws', async () => {
+  class ThrowingClient {
+    once() { return this; }
+    on() { return this; }
+    connect() { throw Error('connect sync'); }
+  }
+  await expect(connect({ host: 'router', privateKey: 'KEY', ClientClass: ThrowingClient })).rejects.toMatchObject({ code: 'SSH_CONNECTION' });
+});
+test('supports agent-only authentication', async () => {
+  class AgentClient {
+    once(event, fn) { this.handlers ??= {}; this.handlers[event] = fn; if (event === 'ready') queueMicrotask(fn); return this; }
+    on() { return this; }
+    connect(options) { this.options = options; }
+    end() { this.handlers.close?.(); }
+  }
+  const client = await connect({ host: 'router', agent: 'agent-socket', ClientClass: AgentClient });
+  expect(client.raw.options.privateKey).toBeUndefined();
+  await client.close();
+});
+test('rejects shell setup when its stream fails or closes', async () => {
+  for (const event of ['error', 'close']) {
+    class ShellClient {
+      once(name, fn) { if (name === 'ready') queueMicrotask(fn); return this; }
+      on() { return this; }
+      connect() {}
+      shell(callback) { callback(null, { on(name, fn) { if (name === event) fn(Error('shell stream')); return this; } }); }
+    }
+    await expect(connect({ host: 'router', privateKey: 'KEY', ClientClass: ShellClient }).then(client => client.shell())).rejects.toThrow('shell');
+  }
+});
+test('keeps shell resolution stable when the stream closes afterward', async () => {
+  class ShellClient {
+    once(event, fn) { if (event === 'ready') queueMicrotask(fn); return this; }
+    on() { return this; }
+    connect() {}
+    shell(callback) {
+      callback(null, { on(name, fn) { if (name === 'close') queueMicrotask(fn); return this; } });
+    }
+  }
+  const client = await connect({ host: 'router', privateKey: 'KEY', ClientClass: ShellClient });
+  await expect(client.shell()).resolves.toBeDefined();
+  await new Promise(resolve => setImmediate(resolve));
+});
 test('keeps a reusable connection open after successful exec', async () => {
   class ReusableClient {
     once(event, fn) { if (event === 'ready') queueMicrotask(fn); return this; }
