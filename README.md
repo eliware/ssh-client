@@ -1,10 +1,10 @@
 # [![eliware.org](https://eliware.org/logos/brand.png)](https://discord.gg/M6aTR9eTwN)
 
-## @eliware/ssh-client [![npm version](https://img.shields.io/npm/v/@eliware/ssh-client.svg)](https://www.npmjs.com/package/@eliware/ssh-client)[![license](https://img.shields.io/github/license/eliware/ssh-client.svg)](LICENSE)[![build status](https://github.com/eliware/ssh-client/actions/workflows/ci.yml/badge.svg)](https://github.com/eliware/ssh-client/actions)
+## @eliware/ssh-client [![npm version](https://img.shields.io/npm/v/@eliware/ssh-client.svg)](https://www.npmjs.com/package/@eliware/ssh-client)[![license](https://img.shields.io/github/license/eliware/ssh-client.svg)](LICENSE)[![build status](https://github.com/eliware/ssh-client/actions/workflows/nodejs.yml/badge.svg)](https://github.com/eliware/ssh-client/actions)
 
 > An ESM-first Node.js SSH client with secure host verification, reusable connections, command execution, interactive shells, and SFTP transfers.
 
-The implementation is organized into focused modules under `src/`; the root entry point remains the public compatibility barrel.
+The implementation is organized into focused modules under `src/`; the root entry point exposes the public API.
 
 Host certificate verification parses and verifies OpenSSH certificate wire data when the transport exposes it; no external executable is required. It validates the CA signature, signing key, host principals, certificate type, validity interval, and revoked/negated host records. File transfers use SFTP (through `ssh2`), not the separate SCP protocol.
 
@@ -21,6 +21,8 @@ host-certificate algorithm negotiation.
   - [ESM Example](#esm-example)
   - [API](#api)
   - [connect](#connectoptions)
+- [Errors / Troubleshooting](#errors--troubleshooting)
+- [Development](#development)
 - [TypeScript](#typescript)
 - [License](#license)
 
@@ -112,7 +114,7 @@ Executes zero or more commands on a remote SSH server using private-key or passw
 - `password` (string): Password credential for password-authenticated servers; useful for bootstrap workflows that later switch to key authentication. If password and agent are both supplied, ssh2 receives both and the server selects the method.
 - `knownHosts` / `knownHostsPath` (string): OpenSSH known-host records
 - `hostCaPath` (string): Trusted OpenSSH host CA public key
-- `hostVerifier` (function): Custom asynchronous verifier receiving the presented key as a `Buffer`; it may return a boolean/Promise or invoke `(accepted: boolean)` once asynchronously. Signal values are normalized to strings in results.
+- `hostVerifier` (function): Custom verifier receiving the presented key as a `Buffer`; it may return a boolean/Promise or invoke `(accepted: boolean)` once asynchronously. Verification fails closed when it throws, rejects, returns `false`, or never accepts the key.
 - `connectTimeout` / `commandTimeout` (number): Connection and command timeouts in milliseconds
 - `timeout` (number): Per-call command-timeout override in milliseconds
 - `signal` (AbortSignal): Cancels the connection or command operation
@@ -145,7 +147,11 @@ When multiple authentication settings are supplied, an explicit private key is p
 
 ### connect(options)
 
-Creates a reusable connection exposing `exec(commands, options?)`, `shell({ onData, onInput, timeout, signal })`, `upload({ localPath, remotePath, mode, timeout, signal })`, `download({ remotePath, localPath, timeout, signal })`, and `close()`. Transfers use SFTP. Shell sessions expose `close()` and a `completion` promise. The connection exposes `state` as `open`, `closing`, or `closed`; operation failures include structured context. `connect()` accepts the same connection options above except `commands`; TypeScript expresses this as `Omit<SshExecOptions, 'commands'>`, with commands supplied later to `exec()`. Authentication may use an explicit key, password, agent, or default key discovery, and lifecycle failures are reported through the returned operation promises. Host certificates are verified against `@cert-authority` records or `hostCaPath`; certificate principals must include the requested host name or IP address.
+Creates a reusable connection exposing `exec(commands, options?)`, `shell({ onData, onInput, timeout, signal })`, `upload({ localPath, remotePath, mode, timeout, signal })`, `download({ remotePath, localPath, timeout, signal })`, and `close()`. Transfers use SFTP. Shell sessions expose `close()` and a `completion` promise. The connection exposes `state` as `open`, `closing`, or `closed`; operation failures include structured context. `connect()` accepts the same connection options above except `commands`; TypeScript expresses this as `Omit<SshExecOptions, 'commands'>`, with commands supplied later to `exec()`. Authentication may use an explicit key, password, agent, or default key discovery, and lifecycle failures are reported through the returned operation promises. Host keys can be verified with a custom verifier, known-host records, or a trusted host CA; certificate principals must include the requested host name or IP address.
+
+### createHostVerifier(options)
+
+Creates a reusable host verifier from `host`, `port`, known-host records or path, and an optional trusted host CA path. Pass the returned verifier as `hostVerifier` when configuring `sshExec()` or `connect()`. Verification is fail-closed and supports exact, wildcard, negated, hashed, revoked, and `@cert-authority` known-host entries.
 
 ## Development
 

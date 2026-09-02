@@ -1,23 +1,18 @@
 # Release Notes
 
-## Unreleased
+## 2.1.0
 
 - Hardened reusable connection lifecycle handling, including validated ports and timeouts, early-close errors, timeout cleanup, and idempotent `close()`.
-- Hardened command execution validation and cleanup, including command/channel timeouts, bounded output, duration metadata, password forwarding, safe working-directory validation, and premature-close handling.
-- Hardened SFTP cleanup and standardized setup, transfer, and close errors.
-- Added regression coverage and synchronized README/TypeScript result documentation.
-- Corrected the asynchronous host-verifier callback contract so the SSH transport cannot accept a host before verification completes.
-- Added certificate-capable transport support through the published `@eliware/ssh2` dependency, including real Ed25519 host-certificate negotiation.
-
-## 2.2.0
-
 - Added structured reusable connection operations with explicit lifecycle state and `SshError` operation/phase context.
 - Added per-operation timeout and cancellation support for command, shell, and SFTP operations.
 - Replaced positional transfer arguments with options objects supporting paths, modes, timeouts, and cancellation.
 - Added explicit shell-session completion and close semantics, and made command exit codes `number | null`.
+- Hardened command execution validation and cleanup, including bounded output, duration metadata, password forwarding, safe working-directory validation, and premature-close handling.
+- Hardened SFTP cleanup and standardized setup, transfer, and close errors.
+- Corrected the asynchronous host-verifier callback contract and added certificate-capable transport support through `@eliware/ssh2`.
 - Split the implementation and test suite into focused one-to-one modules while preserving the `sshExec()` compatibility API.
 - Added secure remote environment fallback handling and updated documentation, examples, and TypeScript declarations.
-- Updated the Eliware SSH2 transport and expanded regression coverage for host certificates, lifecycle failures, and transfer cleanup.
+- Added regression coverage for host certificates, lifecycle failures, and transfer cleanup.
 
 ## 2.0.0
 
