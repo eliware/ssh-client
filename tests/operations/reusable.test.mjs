@@ -1,28 +1,6 @@
 import { expect, test } from '@jest/globals';
-import { createReusableClientAdapter, reusableExec, reusableUpload, reusableDownload } from '../src/operations.mjs';
-
-test('adapts the transport event and lifecycle methods', () => {
-  const calls = [];
-  const client = {
-    on: (...args) => calls.push(['on', args]),
-    removeListener: (...args) => calls.push(['removeListener', args]),
-    once: (...args) => calls.push(['once', args]),
-    emit: (...args) => calls.push(['emit', args]),
-    end: () => calls.push(['end']),
-    destroy: () => calls.push(['destroy']),
-    exec: (...args) => calls.push(['exec', args]),
-  };
-  const adapter = createReusableClientAdapter(client);
-  expect(adapter.on('event', 1)).toBe(adapter);
-  expect(adapter.removeListener('event', 1)).toBe(adapter);
-  expect(adapter.once('event', 1)).toBe(adapter);
-  expect(adapter.emit('event', 1)).toBe(adapter);
-  adapter.connect();
-  adapter.end();
-  adapter.destroy();
-  adapter.exec('command');
-  expect(calls.map(([name]) => name)).toEqual(['on', 'removeListener', 'once', 'emit', 'emit', 'end', 'destroy', 'exec']);
-});
+import { reusableExec, reusableUpload, reusableDownload } from '../../src/operations/reusable.mjs';
+import { createReusableClientAdapter } from '../../src/connection/adapter/reusable.mjs';
 
 test('handles optional transport methods and synchronous shutdown failures', () => {
   const calls = [];

@@ -15,5 +15,6 @@ export function withEnvironment(command, env, mode) {
   if (entries.length === 0) return command;
   if (mode === 'posix') return `${entries.map(([key, value]) => `export ${key}=${quotePosix(value)}`).join('; ')}; ${command}`;
   if (mode === 'powershell') return `${entries.map(([key, value]) => `$env:${key}=${quotePowerShell(value)}`).join('; ')}; ${command}`;
+  if (entries.some(([, value]) => /[%!]/.test(String(value)))) throw new SshError('cmd environment values cannot contain expansion characters', 'SSH_INVALID_OPTIONS');
   return `${entries.map(([key, value]) => `set "${key}=${String(value).replaceAll('"', '""')}"`).join(' && ')} && ${command}`;
 }

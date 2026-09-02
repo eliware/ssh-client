@@ -2,7 +2,7 @@
 export { SshError } from './errors.mjs';
 export { loadKey } from './keys.mjs';
 export { expandPath } from './paths.mjs';
-export { createHostVerifier } from './known-hosts.mjs';
-export { sshExec } from './exec.mjs';
-export { connect } from './connection.mjs';
+export { createHostVerifier } from './security/known-hosts/verification/verifier.mjs';
+export { sshExec } from './exec/runner/pipeline/execute.mjs';
+export { connect } from './connection/lifecycle/client/connect.mjs';
 export { upload, download } from './transfer.mjs';

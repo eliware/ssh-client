@@ -9,11 +9,8 @@ import '../index.mjs';
 
 import { connect, createHostVerifier, sshExec } from '../index.mjs';
 
-test('connect validates missing host through the public entry point', async () => {
+test('connect validates missing host and falls back to USERNAME', async () => {
   await expect(connect()).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
-});
-
-test('connect falls back to USERNAME when USER is unavailable', async () => {
   const user = process.env.USER;
   const username = process.env.USERNAME;
   delete process.env.USER;
@@ -28,18 +25,10 @@ test('connect falls back to USERNAME when USER is unavailable', async () => {
   }
 });
 
-test('throws if options are omitted', async () => {
-  await expect(sshExec()).rejects.toThrow('host and commands[] are required');
-});
-
-
-test('throws if host is missing', async () => {
-  await expect(sshExec({ commands: ['echo hi'] })).rejects.toThrow('host and commands[] are required');
-});
-
-
-test('throws if commands is missing', async () => {
-  await expect(sshExec({ host: 'localhost' })).rejects.toThrow('host and commands[] are required');
+test('rejects missing execution options', async () => {
+  for (const options of [undefined, { commands: ['echo hi'] }, { host: 'localhost' }]) {
+    await expect(sshExec(options)).rejects.toThrow('host and commands[] are required');
+  }
 });
 
 

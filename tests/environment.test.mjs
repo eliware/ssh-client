@@ -14,3 +14,8 @@ test('formats supported remote shell environments and validates input', () => {
   expect(() => withEnvironment('run', { 'BAD-NAME': 'x' }, 'posix')).toThrow('env');
   expect(() => withEnvironment('run', { A: {} }, 'posix')).toThrow('env');
 });
+
+test('rejects cmd environment expansion characters', () => {
+  expect(() => withEnvironment('run', { VALUE: '%PATH%' }, 'cmd')).toThrow('expansion');
+  expect(() => withEnvironment('run', { VALUE: '!secret!' }, 'cmd')).toThrow('expansion');
+});
