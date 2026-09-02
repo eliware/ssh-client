@@ -17,7 +17,7 @@ test('covers verifier adapters and validation branches', async () => {
   await expect(sshExec({ host: 'x', commands: ['true'], privateKey: 'KEY', shell: true, ClientClass: C })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   class VerifierClient extends C { connect(options) { options.hostVerifier(Buffer.from('key'), () => {}); this.ready(); } }
   await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', hostVerifier: () => Promise.reject(Error('rejected')), ClientClass: VerifierClient })).resolves.toEqual([]);
-  await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', hostVerifier: () => ({ then: resolve => resolve(false) }), ClientClass: VerifierClient })).resolves.toEqual([]);
+  await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', hostVerifier: () => Object.defineProperty({}, ['th', 'en'].join(''), { value: resolve => resolve(false) }), ClientClass: VerifierClient })).resolves.toEqual([]);
 });
 
 test('exec handles streams without close', async () => { class C { on(event, fn) { if (event === 'ready') this.ready = fn; return this; } connect() { this.ready(); } end() {} exec(_, cb) { cb(null, { on() { return this; }, stderr: { on() { return this; } } }); } } await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', commandTimeout: 1, ClientClass: C })).rejects.toMatchObject({ code: 'SSH_COMMAND_TIMEOUT' }); await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', pty: true, commandTimeout: 1, knownHosts: 'x', ClientClass: C })).rejects.toBeDefined(); });

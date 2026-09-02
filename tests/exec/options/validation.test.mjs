@@ -1,4 +1,4 @@
-import { expect, jest, test } from '@jest/globals';
+import { expect, test } from '@jest/globals';
 import { sshExec } from '../../../src/exec/runner/pipeline/execute.mjs';
 
 test('validates execution options and cancellation', async () => {
