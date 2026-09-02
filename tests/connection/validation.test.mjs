@@ -9,3 +9,20 @@ test('rejects invalid verifier, timeout, and transport options', async () => {
 test('applies the default connection port during validation', () => {
   expect(() => validateConnectionOptions({ host: 'router', ClientClass: class {}, hostVerifier: () => true }, class {}, 100)).not.toThrow();
 });
+
+test('adapts reusable connection host verifiers', async () => {
+  for (const hostVerifier of [() => true, async () => true, (_key, callback) => callback(true)]) {
+    let instance;
+    class Client {
+      constructor() { instance = this; }
+      once(event, handler) { this[event] = handler; return this; }
+      on() { return this; }
+      connect(config) { config.hostVerifier(Buffer.from('key'), value => { this.verified = value; }); this.ready(); }
+      end() { this.close?.(); }
+    }
+    const client = await connect({ host: 'router', privateKey: 'KEY', hostVerifier, ClientClass: Client });
+    await Promise.resolve();
+    expect(instance.verified).toBe(true);
+    await client.close();
+  }
+});
