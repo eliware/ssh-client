@@ -2,7 +2,7 @@
 
 ## @eliware/ssh-client [![npm version](https://img.shields.io/npm/v/@eliware/ssh-client.svg)](https://www.npmjs.com/package/@eliware/ssh-client)[![license](https://img.shields.io/github/license/eliware/ssh-client.svg)](LICENSE)[![build status](https://github.com/eliware/ssh-client/actions/workflows/ci.yml/badge.svg)](https://github.com/eliware/ssh-client/actions)
 
-> A simple, ESM-first SSH client for Node.js with key or password authentication and sequential command execution.
+> An ESM-first Node.js SSH client with secure host verification, reusable connections, command execution, interactive shells, and SFTP transfers.
 
 The implementation is organized into focused modules under `src/`; the root entry point remains the public compatibility barrel.
 
@@ -29,7 +29,12 @@ host-certificate algorithm negotiation.
 - Simple SSH command execution for Node.js
 - Private-key and password authentication
 - Sequential execution of multiple commands in a single SSH session
-- Returns merged stdout/stderr and exit code for each command
+- Reusable connections with explicit `open`, `closing`, and `closed` state
+- Interactive shell sessions with completion and close semantics
+- SFTP upload/download using options objects
+- Per-operation timeouts and `AbortSignal` cancellation
+- Structured `SshError` failures with operation and phase context
+- Returns separate and merged output, truncation status, and nullable exit codes
 - TypeScript type definitions included
 - Fully ESM compatible
 - Easily testable/mocked via dependency injection
@@ -68,6 +73,28 @@ for (const [i, { result, code }] of results.entries()) {
 }
 ```
 
+### Reusable connection
+
+```js
+import { connect } from '@eliware/ssh-client';
+
+const ssh = await connect({
+  host: 'your.ssh.server',
+  username: 'youruser',
+  privateKeyPath: process.env.SSH_PRIVATE_KEY_PATH,
+  knownHostsPath: '~/.ssh/known_hosts',
+  commandTimeout: 30_000,
+});
+
+try {
+  await ssh.upload({ localPath: './config.boot', remotePath: '/tmp/config.boot', mode: 0o600 });
+  const results = await ssh.exec(['show version'], { timeout: 15_000 });
+  console.log(results[0].result);
+} finally {
+  await ssh.close();
+}
+```
+
 ## API
 
 ### sshExec(options)
@@ -92,7 +119,7 @@ Executes zero or more commands on a remote SSH server using private-key or passw
 - `maxOutput` (number): Maximum combined output bytes per command
 - `cwd` (string): Safe remote working directory; the remote server must interpret the generated `cd` command under its configured shell
 - `env` (object): Remote environment values; without `envFallback`, SSH requests them from the server. With `envFallback`, values are rendered into the command and the option also selects the `cwd` shell syntax (`posix`, `powershell`, or `cmd`). The caller must select syntax matching the server's configured login shell; this option does not change that shell.
-- `pty` (boolean): Request a pseudo-terminal for exec commands. Use `connect().shell()` for interactive SSH shells; `sshExec({ shell: true })` is rejected.
+- `pty` (boolean): Request a pseudo-terminal for exec commands. Use `connect().shell()` for interactive SSH shells.
 - `keepAlive` (boolean): Keep the underlying SSH transport open after execution; reusable connections use this internally
 - Reusable `exec(commands, options)` accepts per-operation execution options (`timeout`, `signal`, `cwd`, `env`, `envFallback`, `pty`, and `commandTimeout`); connection-level values are used when omitted. Use `shell()` for interactive sessions.
 - `agent` (string): optional SSH agent socket/path used for authentication
@@ -114,7 +141,7 @@ When multiple authentication settings are supplied, an explicit private key is p
 
 `maxOutput` must be a positive number. `cwd` is restricted to a shell-safe cross-platform character set because it is applied through the remote shell; paths containing shell metacharacters are rejected. `commandTimeout` covers opening and executing each command channel and closes the SSH connection when it expires. An empty command list is a supported connectivity check and returns an empty array.
 
-`sshExec` is command-based; use `SshConnection.shell()` to open an interactive shell on a reusable connection and provide data/input handlers. Reusable `exec()` inherits the options supplied to `connect()`. With `envFallback`, variables are rendered into the remote command using the selected shell syntax; they are not also sent through SSH's environment request. Ensure the selected syntax matches the remote login shell.
+`sshExec` is command-based; use `connect().shell()` to open an interactive shell on a reusable connection and provide data/input handlers. Reusable `exec()` inherits the options supplied to `connect()`. With `envFallback`, variables are rendered into the remote command using the selected shell syntax; they are not also sent through SSH's environment request. Ensure the selected syntax matches the remote login shell.
 
 ### connect(options)
 
@@ -147,7 +174,6 @@ to enable the direct signature-tampering and revocation regression checks.
 
 Treat private keys, passphrases, agents, host credentials, and command content as sensitive. Never commit keys or credentials. Prefer `knownHosts`/`hostVerifier`, limit command scope, and avoid logging command output containing secrets.
 
-// codescope ignore: index.d.ts is shipped through package.json `types` and `files` metadata alongside this README.
 ## TypeScript
 
 Type definitions are included:
@@ -174,7 +200,6 @@ export interface SshExecOptions {
   env?: Record<string, string | number | boolean>;
   envFallback?: 'posix' | 'powershell' | 'cmd';
   pty?: boolean;
-  shell?: boolean;
   agent?: string;
   passphrase?: string;
   keepAlive?: boolean;
@@ -210,6 +235,12 @@ export interface SshConnection {
 
 export declare function sshExec(options: SshExecOptions): Promise<SshExecResult[]>;
 export declare function connect(options: Omit<SshExecOptions, 'commands'>): Promise<SshConnection>;
+
+export declare class SshError extends Error {
+  code: string;
+  cause?: unknown;
+  context: { operation: string; phase: string; [key: string]: unknown };
+}
 ```
 
 ### Remote environment fallback

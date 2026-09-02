@@ -1,4 +1,4 @@
-import { sshExec } from './index.mjs';
+import { sshExec } from '../index.mjs';
 
 const privateKeyPath = process.env.SSH_PRIVATE_KEY_PATH;
 const knownHosts = process.env.SSH_KNOWN_HOSTS;

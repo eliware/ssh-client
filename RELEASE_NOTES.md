@@ -9,6 +9,16 @@
 - Corrected the asynchronous host-verifier callback contract so the SSH transport cannot accept a host before verification completes.
 - Added certificate-capable transport support through the published `@eliware/ssh2` dependency, including real Ed25519 host-certificate negotiation.
 
+## 2.2.0
+
+- Added structured reusable connection operations with explicit lifecycle state and `SshError` operation/phase context.
+- Added per-operation timeout and cancellation support for command, shell, and SFTP operations.
+- Replaced positional transfer arguments with options objects supporting paths, modes, timeouts, and cancellation.
+- Added explicit shell-session completion and close semantics, and made command exit codes `number | null`.
+- Split the implementation and test suite into focused one-to-one modules while preserving the `sshExec()` compatibility API.
+- Added secure remote environment fallback handling and updated documentation, examples, and TypeScript declarations.
+- Updated the Eliware SSH2 transport and expanded regression coverage for host certificates, lifecycle failures, and transfer cleanup.
+
 ## 2.0.0
 
 - Updated the shared `@eliware/test` development dependency to `2.0.0`.
