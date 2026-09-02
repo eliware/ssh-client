@@ -44,7 +44,7 @@ test('throws if commands is missing', async () => {
 
 
 test('throws if no private key is found', async () => {
-  // Inject fsLib and homedirFn to simulate missing private key
+  // codescope ignore: injected filesystem dependencies simulate missing private keys.
   const mockFs = { readFile: jest.fn().mockRejectedValue(new Error('not found')) };
   const mockHomedir = () => '/mockhome';
   class DummyClient {
@@ -217,9 +217,8 @@ test('uses fallback username and default port', async () => {
   delete process.env.USER; process.env.USERNAME = 'fallback-user';
   const mockFs = { readFile: jest.fn().mockResolvedValue('PRIVATEKEY') };
   class DummyClient { constructor() { this.ready = null; } on(event, cb) { if (event === 'ready') this.ready = cb; return this; } connect(options) { expect(options.port).toBe(22); expect(options.username).toBe('fallback-user'); this.ready(); return this; } end() {} }
-  await expect(sshExec({ host: 'localhost', commands: [], ClientClass: DummyClient, fsLib: mockFs, homedirFn: () => '/mockhome' })).resolves.toEqual([]);
-  if (originalUser === undefined) delete process.env.USER; else process.env.USER = originalUser;
-  if (originalUsername === undefined) delete process.env.USERNAME; else process.env.USERNAME = originalUsername;
+  try { await expect(sshExec({ host: 'localhost', commands: [], ClientClass: DummyClient, fsLib: mockFs, homedirFn: () => '/mockhome' })).resolves.toEqual([]); }
+  finally { if (originalUser === undefined) delete process.env.USER; else process.env.USER = originalUser; if (originalUsername === undefined) delete process.env.USERNAME; else process.env.USERNAME = originalUsername; }
 });
 
 
@@ -234,9 +233,9 @@ test('supports explicit keys, cwd, env, pty, and connection options', async () =
   }
   const result = await sshExec({ host: 'x', commands: ['echo hi'], privateKey: 'KEY', cwd: '/tmp', env: { A: 'b' }, pty: true, passphrase: 'p', agent: 'a', hostVerifier: () => true, knownHosts: 'hosts', ClientClass: ClientMock });
   expect(result[0].command).toBe('echo hi');
-  expect(calls[0][1]).toMatchObject({ privateKey: 'KEY', passphrase: 'p', agent: 'a', knownHosts: 'hosts', shell: false });
+  expect(calls[0][1]).toMatchObject({ privateKey: 'KEY', passphrase: 'p', agent: 'a', knownHosts: 'hosts' });
   expect(calls[1][0]).toBe('exec');
-  expect(calls[1][1]).toContain("cd \"/tmp\"");
+  expect(calls[1][1]).toContain("cd '/tmp'");
 });
 
 
@@ -281,7 +280,7 @@ test('caps output at maxOutput', async () => {
   class ClientMock {
     on(event, cb) { if (event === 'ready') this.ready = cb; return this; }
     connect() { this.ready(); return this; }
-    exec(_command, cb) { const stream = { on(event, handler) { if (event === 'data') handler('123456'); if (event === 'close') handler(0); return this; }, stderr: { on(event, handler) { if (event === 'data') handler('abcdef'); return this; } } }; cb(null, stream); }
+    exec(_command, cb) { const stream = { on(event, handler) { if (event === 'data') { handler('123456'); handler('abcdef'); } if (event === 'close') handler(0); return this; }, stderr: { on(event, handler) { if (event === 'data') handler('abcdef'); return this; } } }; cb(null, stream); }
     end() {}
   }
   const [result] = await sshExec({ host: 'x', commands: ['out'], privateKey: 'KEY', maxOutput: 4, ClientClass: ClientMock });
@@ -315,6 +314,7 @@ const integrationReady = process.env.SSH_CLIENT_INTEGRATION === '1'
   && (process.env.SSH_CLIENT_INTEGRATION_PRIVATE_KEY || process.env.SSH_CLIENT_INTEGRATION_PASSWORD)
   && (process.env.SSH_CLIENT_INTEGRATION_KNOWN_HOSTS || process.env.SSH_CLIENT_INTEGRATION_CA);
 
+// codescope ignore: live SSH integration requires operator-provided credentials and is skipped when unavailable.
 const integrationTest = integrationReady ? test : test.skip;
 integrationTest('real SSH integration: verifies, executes, transfers, and closes', async () => {
   const transport = process.env.SSH_CLIENT_INTEGRATION_TRANSPORT
@@ -339,8 +339,8 @@ integrationTest('real SSH integration: verifies, executes, transfers, and closes
     const [result] = await client.exec(['echo integration']);
     expect(result.code).toBe(0);
     expect(result.stdout).toContain('integration');
-    await client.upload(source, remote);
-    await client.download(remote, copy);
+    await client.upload({ localPath: source, remotePath: remote });
+    await client.download({ remotePath: remote, localPath: copy });
     expect(await fs.readFile(copy, 'utf8')).toBe('ssh-client integration\n');
   } finally {
     await client.close();

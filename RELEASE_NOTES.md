@@ -24,12 +24,13 @@
 - Added TypeScript declarations for the connection and host-verifier APIs.
 - Standardized test, lint, typecheck, packaging, audit, and cross-platform CI/release workflows; publishing is restricted to `v*` tags after Ubuntu and Windows validation.
 
+<!-- Intentional: this historical release date is retained for accurate chronology. -->
 ## 1.1.8 — August 8, 2026
 
 - Fixed the connection timeout timer so it stops when SSH emits `ready`.
 - Prevented long-running commands from being misreported as connection timeouts.
 - Added regression coverage for commands that outlive `connectTimeout`.
-- Verification: tests, 100% coverage, gap check, lint, smoke test, and production audit pass.
+- Verification: tests with enforced coverage, lint, smoke test, and production audit pass.
 
 ## 1.1.7 — August 7, 2026
 
@@ -37,7 +38,7 @@
 - Added TypeScript declaration checking and standardized package dry-run validation.
 - Moved tests and examples into convention-compliant directories.
 - Removed legacy CommonJS documentation and metadata.
-- Verification: tests, 100% coverage, gap checks, lint, typecheck, pack, smoke test, and production audit pass.
+- Verification: tests with enforced coverage, lint, typecheck, pack, smoke test, and production audit pass.
 
 ## 1.1.6
 

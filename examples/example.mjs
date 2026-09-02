@@ -1,11 +1,15 @@
 import { sshExec } from './index.mjs';
 
+const privateKeyPath = process.env.SSH_PRIVATE_KEY_PATH;
+const knownHosts = process.env.SSH_KNOWN_HOSTS;
+if (!privateKeyPath || !knownHosts) throw new Error('Set SSH_PRIVATE_KEY_PATH and SSH_KNOWN_HOSTS before running this example.');
+
 try {
   const results = await sshExec({
     host: 'your.ssh.server',
     username: 'youruser',
-    privateKeyPath: process.env.SSH_PRIVATE_KEY_PATH,
-    knownHosts: process.env.SSH_KNOWN_HOSTS,
+    privateKeyPath,
+    knownHosts,
     connectTimeout: 10_000,
     commandTimeout: 30_000,
     cwd: '/tmp',

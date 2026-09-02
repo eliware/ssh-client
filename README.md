@@ -6,9 +6,7 @@
 
 The implementation is organized into focused modules under `src/`; the root entry point remains the public compatibility barrel.
 
-CI validates ordinary `main` pushes and pull requests; npm publishing remains restricted to `v*` tags.
-
-Host certificate verification parses and verifies OpenSSH certificate wire data when the transport exposes it; no external executable is required. It validates the CA signature, signing key, host principal, certificate type, validity interval, and revoked/negated host records. File transfers use SFTP (through `ssh2`), not the separate SCP protocol.
+Host certificate verification parses and verifies OpenSSH certificate wire data when the transport exposes it; no external executable is required. It validates the CA signature, signing key, host principals, certificate type, validity interval, and revoked/negated host records. File transfers use SFTP (through `ssh2`), not the separate SCP protocol.
 
 The package uses the Eliware-maintained `@eliware/ssh2` transport for
 host-certificate algorithm negotiation.
@@ -21,7 +19,8 @@ host-certificate algorithm negotiation.
 - [Installation](#installation)
 - [Usage](#usage)
   - [ESM Example](#esm-example)
-- [API](#api)
+  - [API](#api)
+  - [connect](#connectoptions)
 - [TypeScript](#typescript)
 - [License](#license)
 
@@ -56,6 +55,7 @@ import { sshExec } from '@eliware/ssh-client';
 const results = await sshExec({
   host: 'your.ssh.server',
   username: 'youruser', // optional if same as local user
+  knownHosts: 'your.ssh.server ssh-ed25519 BASE64_HOST_KEY',
   commands: [
     'echo Hello, SSH!',
     'uname -a',
@@ -72,36 +72,53 @@ for (const [i, { result, code }] of results.entries()) {
 
 ### sshExec(options)
 
-Executes one or more commands on a remote SSH server using private-key or password authentication.
+Executes zero or more commands on a remote SSH server using private-key or password authentication.
 
 #### Parameters
 
 - `host` (string): Hostname or IP address (required)
 - `port` (number): SSH port (default: 22)
-- `username` (string): SSH username (default: current user)
-- `commands` (string[]): List of commands to execute (required)
-- `privateKey` / `privateKeyPath` (string): Private-key credentials
-- `password` (string): Password credential for bootstrap or password-authenticated servers
+- `username` (string): SSH username (default: `USER` on POSIX, otherwise `USERNAME`; explicit `username` always wins)
+- `commands` (string[]): List of commands to execute (required; may be empty for a connectivity check, subject to normal authentication and host verification)
+- Commands are passed to the remote shell as command text; do not include untrusted input unless it has been safely escaped for the target shell.
+- `privateKey` / `privateKeyPath` (string): Private-key credential or path; provide this, `password`, or `agent` as the authentication source
+- `password` (string): Password credential for password-authenticated servers; useful for bootstrap workflows that later switch to key authentication. If password and agent are both supplied, ssh2 receives both and the server selects the method.
 - `knownHosts` / `knownHostsPath` (string): OpenSSH known-host records
 - `hostCaPath` (string): Trusted OpenSSH host CA public key
+- `hostVerifier` (function): Custom asynchronous verifier receiving the presented key as a `Buffer`; it may return a boolean/Promise or invoke `(accepted: boolean)` once asynchronously. Signal values are normalized to strings in results.
+- `connectTimeout` / `commandTimeout` (number): Connection and command timeouts in milliseconds
+- `timeout` (number): Per-call command-timeout override in milliseconds
+- `signal` (AbortSignal): Cancels the connection or command operation
+- `maxOutput` (number): Maximum combined output bytes per command
+- `cwd` (string): Safe remote working directory; the remote server must interpret the generated `cd` command under its configured shell
+- `env` (object): Remote environment values; without `envFallback`, SSH requests them from the server. With `envFallback`, values are rendered into the command and the option also selects the `cwd` shell syntax (`posix`, `powershell`, or `cmd`). The caller must select syntax matching the server's configured login shell; this option does not change that shell.
+- `pty` (boolean): Request a pseudo-terminal for exec commands. Use `connect().shell()` for interactive SSH shells; `sshExec({ shell: true })` is rejected.
+- `keepAlive` (boolean): Keep the underlying SSH transport open after execution; reusable connections use this internally
+- Reusable `exec(commands, options)` accepts per-operation execution options (`timeout`, `signal`, `cwd`, `env`, `envFallback`, `pty`, and `commandTimeout`); connection-level values are used when omitted. Use `shell()` for interactive sessions.
+- `agent` (string): optional SSH agent socket/path used for authentication
+- `passphrase` (string): optional passphrase used to unlock `privateKey` or `privateKeyPath`
 
 #### Returns
 
-- `Promise<Array<{ command: string, stdout: string, stderr: string, result: string, code: number, signal?: string, duration: number }>>`: Resolves sequentially with separate output streams, merged output, exit status, and duration in milliseconds.
+- `Promise<Array<{ command: string, stdout: string, stderr: string, result: string, truncated: boolean, code: number | null, signal?: string, duration: number }>>`: Resolves sequentially with separate output streams, merged output, truncation status, exit status (which may be `null` when no status is supplied), and duration in milliseconds. `signal` is present only when the process exits by signal.
+
+When multiple authentication settings are supplied, an explicit private key is preferred; `privateKeyPath` always loads that path, while an explicitly supplied password or agent suppresses only default key discovery. Host verification remains fail-closed: provide `hostVerifier`, `knownHosts`, `knownHostsPath`, or `hostCaPath`. A custom `hostVerifier` receives `(key, callback)`, must invoke the callback at most once asynchronously when it does not return a boolean/promise, and any thrown error, rejection, or `false` result fails closed. An explicit custom verifier takes precedence over file-based options.
 
 #### Throws
 
-- If connection or authentication fails, or if required credentials are unavailable.
+- If connection, authentication, shell, SFTP, or reusable-connection lifecycle operations fail, or if required credentials are unavailable.
 
 ## Errors / Troubleshooting
 
-`sshExec` validates the host, command list, and port before connecting. It throws `SshError` with codes for invalid options, missing keys, authentication failures, connection failures, connection timeouts, command failures, and command timeouts. Configure host verification with `hostVerifier` or `knownHosts`; do not weaken verification defaults in production.
+`sshExec` validates the host, command list, and port before connecting. Pass an `AbortSignal` through `signal` to cancel connection or command execution; `timeout` overrides the command timeout for that invocation. It throws `SshError` with codes for invalid options, missing keys, authentication failures, connection failures, connection timeouts, command failures, and command timeouts. Configure host verification with `hostVerifier`, `knownHosts`, `knownHostsPath`, or `hostCaPath`; the default verifier fails closed when none is provided.
 
 `maxOutput` must be a positive number. `cwd` is restricted to a shell-safe cross-platform character set because it is applied through the remote shell; paths containing shell metacharacters are rejected. `commandTimeout` covers opening and executing each command channel and closes the SSH connection when it expires. An empty command list is a supported connectivity check and returns an empty array.
 
+`sshExec` is command-based; use `SshConnection.shell()` to open an interactive shell on a reusable connection and provide data/input handlers. Reusable `exec()` inherits the options supplied to `connect()`. With `envFallback`, variables are rendered into the remote command using the selected shell syntax; they are not also sent through SSH's environment request. Ensure the selected syntax matches the remote login shell.
+
 ### connect(options)
 
-Creates a reusable connection exposing `exec(commands)`, `shell({ onData, onInput })`, `upload(localPath, remotePath)`, `download(remotePath, localPath)`, and `close()`. Transfers use SFTP. Host certificates are verified against `@cert-authority` records or `hostCaPath`; certificate principals must include the requested host name or IP address.
+Creates a reusable connection exposing `exec(commands, options?)`, `shell({ onData, onInput, timeout, signal })`, `upload({ localPath, remotePath, mode, timeout, signal })`, `download({ remotePath, localPath, timeout, signal })`, and `close()`. Transfers use SFTP. Shell sessions expose `close()` and a `completion` promise. The connection exposes `state` as `open`, `closing`, or `closed`; operation failures include structured context. `connect()` accepts the same connection options above except `commands`; TypeScript expresses this as `Omit<SshExecOptions, 'commands'>`, with commands supplied later to `exec()`. Authentication may use an explicit key, password, agent, or default key discovery, and lifecycle failures are reported through the returned operation promises. Host certificates are verified against `@cert-authority` records or `hostCaPath`; certificate principals must include the requested host name or IP address.
 
 ## Development
 
@@ -109,7 +126,7 @@ Creates a reusable connection exposing `exec(commands)`, `shell({ onData, onInpu
 npm test
 npm run lint
 npm run typecheck
-npm run pack
+npm audit --omit=dev --audit-level=moderate
 ```
 
 For real-server integration coverage, provide `SSH_CLIENT_INTEGRATION_HOST`,
@@ -130,6 +147,7 @@ to enable the direct signature-tampering and revocation regression checks.
 
 Treat private keys, passphrases, agents, host credentials, and command content as sensitive. Never commit keys or credentials. Prefer `knownHosts`/`hostVerifier`, limit command scope, and avoid logging command output containing secrets.
 
+// codescope ignore: index.d.ts is shipped through package.json `types` and `files` metadata alongside this README.
 ## TypeScript
 
 Type definitions are included:
@@ -139,31 +157,64 @@ export interface SshExecOptions {
   host: string;
   port?: number;
   username?: string;
-  commands: string[];
+  commands: string[]; // Required; an empty array is valid when authentication and host verification are configured.
   privateKey?: string;
   privateKeyPath?: string;
   password?: string;
   knownHosts?: string;
   knownHostsPath?: string;
   hostCaPath?: string;
+  hostVerifier?: (key: Buffer, callback?: (accepted: boolean) => void) => boolean | Promise<boolean> | void;
+  connectTimeout?: number;
+  commandTimeout?: number;
+  timeout?: number;
+  signal?: AbortSignal;
+  maxOutput?: number;
+  cwd?: string;
+  env?: Record<string, string | number | boolean>;
+  envFallback?: 'posix' | 'powershell' | 'cmd';
+  pty?: boolean;
+  shell?: boolean;
+  agent?: string;
+  passphrase?: string;
+  keepAlive?: boolean;
 }
 
 export interface SshExecResult {
+  command: string;
+  stdout: string;
+  stderr: string;
   result: string;
-  code: number;
+  truncated: boolean;
+  code: number | null;
+  signal?: string;
+  duration: number;
+}
+
+export interface UploadOptions { localPath: string; remotePath: string; mode?: number; timeout?: number; signal?: AbortSignal; }
+export interface DownloadOptions { remotePath: string; localPath: string; timeout?: number; signal?: AbortSignal; }
+
+export interface ShellSession extends NodeJS.ReadWriteStream {
+  close(): void;
+  completion: Promise<{ code: number | null; signal?: string }>;
 }
 
 export interface SshConnection {
-  exec(commands: string[]): Promise<SshExecResult[]>;
-  shell(options?: { onData?: (data: Buffer) => void; onInput?: (stream: any) => void }): Promise<any>;
-  upload(localPath: string, remotePath: string): Promise<void>;
-  download(remotePath: string, localPath: string): Promise<void>;
-  close(): Promise<void>;
+  readonly state: 'open' | 'closing' | 'closed';
+  exec(commands: string[], options?: { signal?: AbortSignal; timeout?: number; commandTimeout?: number; cwd?: string; env?: Record<string, string | number | boolean>; envFallback?: 'posix' | 'powershell' | 'cmd'; pty?: boolean }): Promise<SshExecResult[]>;
+  shell(options?: { onData?: (data: Buffer) => void; onInput?: (stream: ShellSession) => void; timeout?: number; signal?: AbortSignal }): Promise<ShellSession>;
+  upload(options: UploadOptions): Promise<void>;
+  download(options: DownloadOptions): Promise<void>;
+  close(): Promise<void>; // Force-destroys the transport after the close grace period.
 }
 
 export declare function sshExec(options: SshExecOptions): Promise<SshExecResult[]>;
 export declare function connect(options: Omit<SshExecOptions, 'commands'>): Promise<SshConnection>;
 ```
+
+### Remote environment fallback
+
+Pass `env` to request SSH environment variables. If the target SSH daemon does not accept `AcceptEnv`, also set `envFallback` to `posix`, `powershell`, or `cmd`; the library safely initializes those variables in the remote shell. When `cwd` is supplied, `envFallback` also selects the corresponding remote shell command syntax.
 
 ## Support
 
@@ -183,6 +234,3 @@ For help, questions, or to chat with the author and community, visit:
 - [GitHub](https://github.com/eliware/ssh-client)
 - [npm](https://www.npmjs.com/package/@eliware/ssh-client)
 - [Discord](https://discord.gg/M6aTR9eTwN)
-### Remote environment fallback
-
-Pass `env` to request SSH environment variables. If the target SSH daemon does not accept `AcceptEnv`, also set `envFallback` to `posix`, `powershell`, or `cmd`; the library safely initializes those variables in the remote shell.

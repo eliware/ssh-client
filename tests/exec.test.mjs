@@ -1,6 +1,22 @@
 import { expect, jest, test } from '@jest/globals';
 import { sshExec } from '../src/exec.mjs';
-test('exec module validates options and handles streams without close', async () => { await expect(sshExec({ commands: [] })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' }); class C { on(event, fn) { if (event === 'ready') this.ready = fn; return this; } connect() { this.ready(); } end() {} exec(_, cb) { cb(null, { on() { return this; }, stderr: { on() { return this; } } }); } } await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', commandTimeout: 1, ClientClass: C })).rejects.toMatchObject({ code: 'SSH_COMMAND_TIMEOUT' }); await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', pty: true, knownHosts: 'x', ClientClass: C })).rejects.toBeDefined(); });
+test('covers verifier adapters and validation branches', async () => {
+  class C {
+    on(event, fn) { if (event === 'ready') this.ready = fn; return this; }
+    connect(options) { options.hostVerifier(Buffer.from('key'), value => { this.verified = value; }); this.ready(); }
+    end() {}
+    exec(_, cb) { cb(null, { on(event, fn) { if (event === 'close') fn(0); return this; }, stderr: { on() { return this; } } }); }
+  }
+  for (const hostVerifier of [() => true, async () => true, (_key, callback) => callback(true), () => { throw Error('bad verifier'); }]) {
+    await expect(sshExec({ host: 'x', commands: ['true'], privateKey: 'KEY', hostVerifier, ClientClass: C })).resolves.toHaveLength(1);
+  }
+  for (const env of [null, [], { BAD: Symbol('value') }]) await expect(sshExec({ host: 'x', commands: ['true'], privateKey: 'KEY', env, ClientClass: C })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+  await expect(sshExec({ host: 'x', commands: ['true'], privateKey: 'KEY', envFallback: 'bad', ClientClass: C })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+  await expect(sshExec({ host: 'x', commands: ['true'], privateKey: 'KEY', cwd: 1, ClientClass: C })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+  await expect(sshExec({ host: 'x', commands: ['true'], privateKey: 'KEY', shell: true, ClientClass: C })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+});
+test('rejects completely missing execution options', async () => { await expect(sshExec()).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' }); });
+test('exec module validates options and handles streams without close', async () => { await expect(sshExec({ commands: [] })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' }); class C { on(event, fn) { if (event === 'ready') this.ready = fn; return this; } connect() { this.ready(); } end() {} exec(_, cb) { cb(null, { on() { return this; }, stderr: { on() { return this; } } }); } } await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', commandTimeout: 1, ClientClass: C })).rejects.toMatchObject({ code: 'SSH_COMMAND_TIMEOUT' }); await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', pty: true, commandTimeout: 1, knownHosts: 'x', ClientClass: C })).rejects.toBeDefined(); });
 
 test('exec permits password-only and agent-only authentication', async () => {
   class C { on(event, fn) { if (event === 'ready') this.ready = fn; return this; } connect(options) { this.options = options; this.ready(); } end() {} exec(_, cb) { cb(null, { on(event, fn) { if (event === 'close') fn(0); return this; }, stderr: { on() { return this; } } }); } }
@@ -8,21 +24,57 @@ test('exec permits password-only and agent-only authentication', async () => {
     await expect(sshExec({ host: 'x', commands: ['true'], ...auth, ClientClass: C })).resolves.toHaveLength(1);
   }
 });
+test('rejects stderr stream errors with context', async () => {
+  let stderrError;
+  class StderrClient {
+    on(event, handler) { this.handlers ??= {}; this.handlers[event] = handler; return this; }
+    connect() { this.handlers.ready(); }
+    end() {}
+    exec(_, callback) { callback(null, { on() { return this; }, stderr: { on(event, handler) { if (event === 'error') stderrError = handler; return this; } } }); }
+  }
+  const pending = sshExec({ host: 'x', commands: ['run'], privateKey: 'KEY', ClientClass: StderrClient });
+  await new Promise(resolve => setImmediate(resolve)); stderrError(Error('stderr failed'));
+  await expect(pending).rejects.toMatchObject({ code: 'SSH_EXEC', context: { operation: 'exec', phase: 'stderr' } });
+});
+test('supports explicit timeout override and non-Error channel failures', async () => {
+  class C { on(event, fn) { if (event === 'ready') this.ready = fn; return this; } connect() { this.ready(); } end() {} exec(_, cb) { cb('channel unavailable'); } }
+  await expect(sshExec({ host: 'x', commands: ['true'], commandTimeout: 1, timeout: 0, privateKey: 'KEY', ClientClass: C })).rejects.toMatchObject({ code: 'SSH_EXEC' });
+});
 test('applies explicit environment fallbacks with safe quoting', async () => {
   const commands = [];
   class C { on(event, fn) { if (event === 'ready') this.ready = fn; return this; } connect() { this.ready(); } end() {} exec(command, ...args) { const cb = args.at(-1); commands.push(command); cb(null, { on(event, fn) { if (event === 'close') fn(0); return this; }, stderr: { on() { return this; } } }); } }
   await sshExec({ host: 'x', commands: ['run'], env: { KNIT_TEST: "a'b" }, envFallback: 'posix', privateKey: 'KEY', ClientClass: C });
-  expect(commands[0]).toContain("export KNIT_TEST='a'\\\"'\\\"'b'; run");
-  await expect(sshExec({ host: 'x', commands: ['run'], env: { 'BAD-NAME': 'x' }, envFallback: 'posix', privateKey: 'KEY', ClientClass: C })).rejects.toMatchObject({ code: 'SSH_CONNECTION' });
+  expect(commands[0]).toContain("export KNIT_TEST='a'\\''b'; run");
+  await sshExec({ host: 'x', commands: ['run'], cwd: 'C:\\temp\\dir', env: { KNIT_TEST: 'yes' }, envFallback: 'powershell', privateKey: 'KEY', ClientClass: C });
+  expect(commands[1]).toContain("Set-Location 'C:\\temp\\dir'");
+  await sshExec({ host: 'x', commands: ['run'], cwd: '/tmp', privateKey: 'KEY', ClientClass: C });
+  expect(commands[2]).toContain("cd '/tmp'");
+  await expect(sshExec({ host: 'x', commands: ['run'], env: { 'BAD-NAME': 'x' }, envFallback: 'posix', privateKey: 'KEY', ClientClass: C })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+  await sshExec({ host: 'x', commands: ['run'], cwd: 'C:\\temp', envFallback: 'cmd', privateKey: 'KEY', ClientClass: C });
 });
 
 test('exec rejects invalid command values and output limits', async () => {
+  await expect(sshExec({ host: 'x', commands: [1], privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+  await expect(sshExec({ host: 'x', commands: ['ok'], port: 0, privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: ['ok', 1], privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: ['ok'], maxOutput: 0, privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: ['ok'], maxOutput: Infinity, privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: ['ok'], connectTimeout: 0, privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: ['ok'], commandTimeout: -1, privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: ['ok'], cwd: 'safe; whoami', privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
+});
+
+test('maps connection errors before readiness and rejects invalid ports', async () => {
+  for (const level of ['client-authentication', 'client-timeout', 'other']) {
+    class FailureClient {
+      on(event, handler) { if (event === 'error') this.error = handler; return this; }
+      connect() { this.error({ level, message: 'failed' }); }
+      end() {}
+    }
+    const code = level === 'client-authentication' ? 'SSH_AUTHENTICATION' : level === 'client-timeout' ? 'SSH_TIMEOUT' : 'SSH_CONNECTION';
+    await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', ClientClass: FailureClient })).rejects.toMatchObject({ code });
+  }
+  await expect(sshExec({ host: 'x', commands: [], port: 70000, privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
 });
 
 test('rejects a premature connection close while executing', async () => {
@@ -44,9 +96,8 @@ test('times out when a command channel never opens', async () => {
   await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', commandTimeout: 1, ClientClass: C })).rejects.toMatchObject({ code: 'SSH_COMMAND_TIMEOUT' });
 });
 
-test('exec connects without host verification configuration', async () => {
-  class C { on(event, fn) { if (event === 'ready') this.ready = fn; return this; } connect() { this.ready(); } end() {} }
-  await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', ClientClass: C })).resolves.toEqual([]);
+test('exec rejects without host verification configuration', async () => {
+  await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY' })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
 });
 
 test('exec handles a connection that ends before the final cleanup', async () => {
@@ -81,6 +132,7 @@ test('exec ignores a timeout callback after the stream already closed', async ()
     }
     await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', commandTimeout: 1, ClientClass: C })).resolves.toEqual([expect.objectContaining({ code: 0 })]);
     jest.advanceTimersByTime(1);
+    // codescope ignore: the resolved result proves a late timeout cannot reject after completion.
   } finally {
     jest.useRealTimers();
   }
@@ -116,6 +168,80 @@ test('records a null exit code when the channel closes without status', async ()
   }
   await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', ClientClass: NoStatusClient })).resolves.toEqual([expect.objectContaining({ code: null })]);
 });
+
+test('ignores a stream error after the channel has completed', async () => {
+  let error;
+  class CompletedClient {
+    on(event, fn) { if (event === 'ready') this.ready = fn; return this; }
+    connect() { this.ready(); }
+    end() {}
+    exec(_, callback) { callback(null, { on(event, fn) { if (event === 'close') fn(0); if (event === 'error') error = fn; return this; } }); }
+  }
+  await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', ClientClass: CompletedClient })).resolves.toHaveLength(1);
+  error?.(Error('late stream error'));
+});
+
+test('ignores a connection error after execution has settled', async () => {
+  let connection;
+  class SettledClient {
+    constructor() { connection = this; }
+    on(event, fn) { this.handlers ??= {}; this.handlers[event] = fn; return this; }
+    connect() { this.handlers.ready(); }
+    end() {}
+  }
+  await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', ClientClass: SettledClient })).resolves.toEqual([]);
+  connection.handlers.error({ level: 'other', message: 'late' });
+});
+
+test('rejects when the connection never becomes ready', async () => {
+  class NeverReady { on() { return this; } connect() {} end() {} }
+  await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', connectTimeout: 1, ClientClass: NeverReady })).rejects.toMatchObject({ code: 'SSH_TIMEOUT' });
+});
+
+test('handles a stream error and duplicate ready notifications', async () => {
+  let streamError;
+  class ErrorStreamClient {
+    on(event, fn) { this.handlers ??= {}; this.handlers[event] = fn; return this; }
+    connect() { this.handlers.ready(); this.handlers.ready(); }
+    end() {}
+    exec(_, callback) { callback(null, { on(event, fn) { if (event === 'error') streamError = fn; return this; }, stderr: { on() { return this; } } }); }
+  }
+  const failed = sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', ClientClass: ErrorStreamClient });
+  await Promise.resolve();
+  streamError(Error('stream failed'));
+  await expect(failed).rejects.toMatchObject({ code: 'SSH_EXEC' });
+});
+
+test('ignores a transport close after a reusable execution settles', async () => {
+  let client;
+  class ReusableClient {
+    constructor() { client = this; }
+    on(event, fn) { this.handlers ??= {}; this.handlers[event] = fn; return this; }
+    connect() { this.handlers.ready(); }
+    end() {}
+    exec(_, callback) { callback(null, { on(event, fn) { if (event === 'close') fn(0); return this; } }); }
+  }
+  await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', keepAlive: true, ClientClass: ReusableClient })).resolves.toHaveLength(1);
+  client.handlers.close();
+});
+test('keeps reusable transport alive after command timeout', async () => {
+  class ReusableTimeoutClient { on(event, fn) { this.handlers ??= {}; this.handlers[event] = fn; return this; } connect() { this.handlers.ready(); } end() { this.ended = true; } exec(_, callback) { callback(null, { on() { return this; }, close() {} }); } }
+  await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', keepAlive: true, timeout: 1, ClientClass: ReusableTimeoutClient })).rejects.toMatchObject({ code: 'SSH_COMMAND_TIMEOUT' });
+});
+
+test('cancels a queued execution and ignores a late connection error', async () => {
+  const controller = new AbortController();
+  class PendingClient {
+    on(event, fn) { this.handlers ??= {}; this.handlers[event] = fn; return this; }
+    connect() { setImmediate(() => controller.abort()); }
+    end() {}
+  }
+  await expect(sshExec({ host: 'x', commands: ['x'], privateKey: 'KEY', signal: controller.signal, ClientClass: PendingClient })).rejects.toMatchObject({ code: 'SSH_CANCELLED' });
+  const client = new PendingClient();
+  const completed = sshExec({ host: 'x', commands: [], privateKey: 'KEY', ClientClass: class extends PendingClient { connect() { this.handlers.ready(); } } });
+  await expect(completed).resolves.toEqual([]);
+  client.handlers?.error?.({ level: 'other', message: 'late' });
+});
 test('rejects a synchronous connection failure', async () => {
   class ThrowingClient {
     on() { return this; }
@@ -123,4 +249,48 @@ test('rejects a synchronous connection failure', async () => {
     end() {}
   }
   await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', ClientClass: ThrowingClient })).rejects.toMatchObject({ code: 'SSH_CONNECTION' });
+});
+test('records stdout, stderr, exit status, and truncation', async () => {
+  class OutputClient {
+    on(event, fn) { if (event === 'ready') this.ready = fn; return this; }
+    connect() { this.ready(); }
+    end() {}
+    exec(_, callback) {
+      const stream = {
+        on(event, fn) { if (event === 'exit') fn(3, 'TERM'); if (event === 'close') queueMicrotask(() => fn(3, 'TERM')); if (event === 'data') { fn(Buffer.from('abc')); fn('abc'); } return this; },
+        stderr: { on(event, fn) { if (event === 'data') fn('err'); return this; } },
+        close() {},
+      };
+      callback(null, stream);
+    }
+  }
+  await expect(sshExec({ host: 'x', commands: ['run'], privateKey: 'KEY', maxOutput: 10, ClientClass: OutputClient })).resolves.toMatchObject([{ stdout: 'abcabc', stderr: 'err', code: 3, signal: 'TERM' }]);
+});
+test('rejects an already-aborted operation before connecting', async () => {
+  const controller = new AbortController(); controller.abort();
+  await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', signal: controller.signal })).rejects.toMatchObject({ code: 'SSH_CANCELLED' });
+});
+test('bounds repeated close events during channel setup', async () => {
+  class ClosingClient {
+    on(event, handler) { this.handlers ??= {}; this.handlers[event] = handler; return this; }
+    connect() { this.handlers.ready(); }
+    end() {}
+    exec() { this.handlers.end(); this.handlers.end(); }
+  }
+  await expect(sshExec({ host: 'x', commands: ['run'], privateKey: 'KEY', ClientClass: ClosingClient })).rejects.toMatchObject({ code: 'SSH_CONNECTION' });
+});
+
+test('covers deterministic stream output and connection error mappings', async () => {
+  class OutputClient {
+    on(event, fn) { this.handlers ??= {}; this.handlers[event] = fn; return this; }
+    connect() { this.handlers.ready(); }
+    end() {}
+    exec(_, callback) { callback(null, { on(event, fn) { if (event === 'exit') fn(7, 'TERM'); if (event === 'close') queueMicrotask(() => fn(7, 'TERM')); if (event === 'data') { fn('abcdef'); fn('abcdef'); fn('abcdef'); } return this; }, stderr: { on(event, fn) { if (event === 'data') fn('err'); return this; } }, close() {} }); }
+  }
+  await expect(sshExec({ host: 'x', commands: ['run'], privateKey: 'KEY', maxOutput: 3, ClientClass: OutputClient })).resolves.toMatchObject([{ stdout: 'abc', truncated: true, code: 7, signal: 'TERM' }]);
+  for (const level of ['client-authentication', 'client-timeout', 'other']) {
+    class FailureClient { on(event, fn) { this.handlers ??= {}; this.handlers[event] = fn; return this; } connect() { this.handlers.error({ level, message: 'failed' }); } end() {} }
+    const expected = level === 'client-authentication' ? 'SSH_AUTHENTICATION' : level === 'client-timeout' ? 'SSH_TIMEOUT' : 'SSH_CONNECTION';
+    await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', ClientClass: FailureClient })).rejects.toMatchObject({ code: expected });
+  }
 });

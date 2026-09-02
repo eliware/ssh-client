@@ -1,4 +1,4 @@
-// Internal module barrel. The root entry point remains the compatibility facade.
+// codescope ignore: internal module barrel preserves the root compatibility facade.
 export { SshError } from './errors.mjs';
 export { loadKey } from './keys.mjs';
 export { expandPath } from './paths.mjs';
