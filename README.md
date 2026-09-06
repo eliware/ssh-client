@@ -1,5 +1,7 @@
 # [![eliware.org](https://eliware.org/logos/brand.png)](https://discord.gg/M6aTR9eTwN)
 
+Documentation: [docs](docs/README.md) · [specifications](specs/README.md) · [examples](examples/README.md)
+
 ## @eliware/ssh-client [![npm version](https://img.shields.io/npm/v/@eliware/ssh-client.svg)](https://www.npmjs.com/package/@eliware/ssh-client)[![license](https://img.shields.io/github/license/eliware/ssh-client.svg)](LICENSE)[![build status](https://github.com/eliware/ssh-client/actions/workflows/nodejs.yml/badge.svg)](https://github.com/eliware/ssh-client/actions)
 
 > An ESM-first Node.js SSH client with secure host verification, reusable connections, command execution, interactive shells, and SFTP transfers.
