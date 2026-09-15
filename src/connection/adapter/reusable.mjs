@@ -8,5 +8,6 @@ export function createReusableClientAdapter(client) {
     end() { try { client.end(); } catch { client.destroy?.(); } },
     destroy() { client.destroy?.(); },
     exec(...args) { return client.exec(...args); },
+    sftp(...args) { return client.sftp(...args); },
   };
 }

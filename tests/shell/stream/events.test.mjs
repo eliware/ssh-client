@@ -1,0 +1,4 @@
+import { expect, jest, test } from '@jest/globals';
+import { attachStreamEvents } from '../../../src/shell/stream/events.mjs';
+test('normalizes data and forwards errors', () => { const handlers = {}; const stream = { on: (event, fn) => { handlers[event] = fn; } }; const onData = jest.fn(); const onError = jest.fn(); attachStreamEvents(stream, { onData, onError }); handlers.data('text'); handlers.data(Buffer.from('bytes')); handlers.error('problem'); expect(onData.mock.calls[0][0].toString()).toBe('text'); expect(onData.mock.calls[1][0]).toEqual(Buffer.from('bytes')); expect(onError).toHaveBeenCalledWith('problem'); });
+test('uses default event callbacks', () => { const handlers = {}; const stream = { on: (event, fn) => { handlers[event] = fn; } }; attachStreamEvents(stream); expect(() => handlers.data('text')).not.toThrow(); expect(() => handlers.error(Error('ignored'))).not.toThrow(); });

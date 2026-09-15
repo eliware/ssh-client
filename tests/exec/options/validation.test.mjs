@@ -2,6 +2,9 @@ import { expect, test } from '@jest/globals';
 import { sshExec } from '../../../src/exec/runner/pipeline/execute.mjs';
 
 test('validates execution options and cancellation', async () => {
+  for (const options of [undefined, { commands: ['echo hi'] }, { host: 'localhost' }]) {
+    await expect(sshExec(options)).rejects.toThrow('host and commands[] are required');
+  }
   await expect(sshExec()).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ commands: [] })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });
   await expect(sshExec({ host: 'x', commands: [], privateKey: 'KEY', commandTimeout: 0, timeout: -1, ClientClass: class {} })).rejects.toMatchObject({ code: 'SSH_INVALID_OPTIONS' });

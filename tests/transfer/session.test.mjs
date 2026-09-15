@@ -1,5 +1,6 @@
 import { expect, test, jest } from '@jest/globals';
-import { upload, download } from '../../src/transfer.mjs';
+import { upload } from '../../src/transfer/upload.mjs';
+import { download } from '../../src/transfer/download.mjs';
 test('accepts option objects for transfers', async () => {
   const sftp = { end() {}, fastPut: (local, remote, options, done) => { expect([local, remote, options.mode]).toEqual(['a', 'b', 0o600]); done(); }, fastGet: (remote, local, done) => { expect([remote, local]).toEqual(['b', 'a']); done(); } };
   const client = { sftp: callback => callback(null, sftp) };
@@ -26,7 +27,6 @@ test('cleans up an SFTP handle supplied after cancellation', async () => {
   setup(null, { end });
   expect(end).toHaveBeenCalledTimes(1);
 });
-// codescope ignore: this matrix covers transfer directions and callback outcomes; live session behavior is integration coverage.
 test('handles SFTP success and failure', async () => { const client = { sftp: callback => callback(Error('sftp unavailable')) }; await expect(upload(client, { localPath: 'local', remotePath: 'remote' })).rejects.toThrow('sftp unavailable'); await expect(download(client, { remotePath: 'remote', localPath: 'local' })).rejects.toThrow('sftp unavailable'); const sftp = { end: jest.fn(), fastPut: (_, __, ___, cb) => cb(), fastGet: (_, __, cb) => cb() }; const good = { sftp: cb => cb(null, sftp) }; await expect(upload(good, { localPath: 'local', remotePath: 'remote' })).resolves.toBeUndefined(); await expect(download(good, { remotePath: 'remote', localPath: 'local' })).resolves.toBeUndefined(); const noEnd = { fastPut: (_, __, ___, cb) => cb(), fastGet: (_, __, cb) => cb() }; const noEndClient = { sftp: cb => cb(null, noEnd) }; await upload(noEndClient, { localPath: 'a', remotePath: 'b' }); await download(noEndClient, { remotePath: 'a', localPath: 'b' }); const failure = { end: jest.fn(), fastPut: (_, __, ___, cb) => cb(Error('put')), fastGet: (_, __, cb) => cb(Error('get')) }; const bad = { sftp: cb => cb(null, failure) }; await expect(upload(bad, { localPath: 'a', remotePath: 'b' })).rejects.toThrow('put'); await expect(download(bad, { remotePath: 'a', localPath: 'b' })).rejects.toThrow('get'); expect(sftp.end).toHaveBeenCalledTimes(2); });
 test('reports SFTP close failures', async () => {
   const sftp = { end: () => { throw Error('close'); }, fastPut: (_, __, ___, callback) => callback() };

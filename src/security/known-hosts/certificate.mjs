@@ -1,7 +1,10 @@
-import { readString, encodeString, readUint64, readUint32 } from './encoding.mjs';
+import { readString } from './encoding/read-string.mjs';
+import { encodeString } from './encoding/encode-string.mjs';
+import { readUint64 } from './encoding/read-uint64.mjs';
+import { readUint32 } from './encoding/read-uint32.mjs';
+import { readPrincipals } from './certificates/principals.mjs';
 
 const CERT_SUFFIX = '-cert-v01@openssh.com';
-function principals(value) { const result = []; let offset = 0; while (offset < value.length) { const entry = readString(value, offset); result.push(entry.value.toString()); offset = entry.next; } return result; }
 
 export function parseCertificate(key) {
   let offset = 0; const type = readString(key, offset); offset = type.next; const typeText = type.value.toString();
@@ -17,5 +20,5 @@ export function parseCertificate(key) {
   offset = readString(key, offset).next; offset = readString(key, offset).next; offset = readString(key, offset).next;
   const signingKey = readString(key, offset); offset = signingKey.next; const signed = key.subarray(0, offset); const signature = readString(key, offset);
   if (signature.next !== key.length || !signingKey.value.length) throw new Error('invalid host certificate signature fields');
-  return { typeText, base, hostKey: Buffer.concat([encodeString(Buffer.from(base)), ...publicFields.map(encodeString)]), kind: kind.value, after: after.value, before: before.value, principals: principals(principalField.value), signed, signingKey: signingKey.value, signature: signature.value };
+  return { typeText, base, hostKey: Buffer.concat([encodeString(Buffer.from(base)), ...publicFields.map(encodeString)]), kind: kind.value, after: after.value, before: before.value, principals: readPrincipals(principalField.value), signed, signingKey: signingKey.value, signature: signature.value };
 }

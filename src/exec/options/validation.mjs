@@ -1,18 +1,5 @@
 import { SshError } from '../../errors.mjs';
 
-export function adaptHostVerifier(verifier) {
-  return (key, callback) => {
-    let settled = false;
-    const complete = value => { if (settled) return; settled = true; callback(value === true); };
-    try {
-      const result = verifier(key, complete);
-      if (typeof result === 'boolean') complete(result);
-      else if (result?.then) result.then(complete, () => complete(false));
-    } catch { complete(false); }
-    return undefined;
-  };
-}
-
 export function validateOptions({ host, port, commands, maxOutput, cwd, connectTimeout, commandTimeout, env, envFallback, shell }) {
   if (!host || !Array.isArray(commands)) throw new SshError('host and commands[] are required', 'SSH_INVALID_OPTIONS');
   if (!commands.every(command => typeof command === 'string')) throw new SshError('commands[] must contain only strings', 'SSH_INVALID_OPTIONS');

@@ -1,5 +1,6 @@
 import { expect, test, jest } from '@jest/globals';
-import { createHostVerifier, dateValid } from '../../../../src/security/known-hosts/verification/verifier.mjs';
+import { createHostVerifier } from '../../../../src/security/known-hosts/verification/verifier.mjs';
+import { dateValid } from '../../../../src/security/known-hosts/verification/date-valid.mjs';
 test('covers verifier configuration and failure callbacks', async () => {
   expect(createHostVerifier()('key')).toBe(false);
   expect(dateValid('2999-01-01', new Date('2000-01-01'))).toBe(false);
@@ -9,7 +10,6 @@ test('covers verifier configuration and failure callbacks', async () => {
   const callback = () => { throw Error('callback'); };
   expect(failing('actual', callback)).toBeUndefined(); await new Promise(resolve => setTimeout(resolve, 0));
 });
-// codescope ignore: this fixture intentionally exercises trust precedence and fail-closed behavior together.
 test('handles trusted, excluded, hashed, and malformed host records', async () => {
   expect(dateValid('2000-01-01', new Date('2001-01-01'))).toBe(true); expect(dateValid(undefined)).toBe(false); expect(dateValid('not-a-date')).toBe(false);
   const actual = { equals: () => true };
@@ -34,7 +34,6 @@ test('handles trusted, excluded, hashed, and malformed host records', async () =
   expect(await createHostVerifier({ host: 'router.example', knownHosts: '!!router.example ssh-test key', utils })('actual')).toBe(false);
   const parseFailure = createHostVerifier({ host: 'router.example', knownHosts: 'router.example ssh-ed25519 public', utils: { parseKey: value => value === 'presented' ? { getPublicSSH: () => ({ equals: () => false }) } : (() => { throw Error('bad record'); })() } });
   expect(await parseFailure('presented')).toBe(false);
-  // codescope ignore: synthetic parser fixtures isolate policy branches; live cryptographic tests are optional integration coverage.
   const caFs = { mkdtemp: async () => '/tmp', writeFile: async () => {}, readFile: async () => 'ssh-ed25519 key', rm: async () => {} }; const ca = createHostVerifier({ host: 'router.example', hostCaPath: '/ca', fsLib: caFs, homedirFn: () => '/home', utils, runCommand: async () => ({ stdout: 'Type: ssh-ed25519-cert-v01@openssh.com\nkey' }) }); expect(await ca('actual')).toBe(false);
   const fromFile = createHostVerifier({ host: 'router.example', port: 2200, knownHostsPath: '~/known_hosts', fsLib: { readFile: async path => path === '/home/known_hosts' ? 'router.example ssh-test key' : '' }, homedirFn: () => '/home', utils }); expect(await fromFile('actual')).toBe(true);
   const badKey = createHostVerifier({ host: 'router.example', knownHosts: 'router.example bad key', utils: { parseKey: () => { throw Error('bad key'); } } }); expect(await badKey('actual')).toBe(false);

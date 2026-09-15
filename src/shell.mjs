@@ -1,7 +1,8 @@
-import { SshError } from './errors.mjs';
 import { validateShellTimeout } from './shell/validation.mjs';
 import { attachShellStream } from './shell/stream.mjs';
 import { createShellControl } from './shell/control.mjs';
+import { completeShellSetup } from './shell/completion.mjs';
+import { requestShell } from './shell/request.mjs';
 
 export function openShell(client, { onData = () => {}, onInput, signal, timeout = 0 } = {}) {
   return new Promise((resolve, reject) => {
@@ -11,12 +12,9 @@ export function openShell(client, { onData = () => {}, onInput, signal, timeout 
     let settled = false;
     const handle = (error, stream) => {
       if (settled || control.isSettled()) { stream?.close?.(); return; }
-      control.stop();
-      if (error) { settled = true; reject(new SshError(`SSH shell error: ${error.message || String(error)}`, 'SSH_SHELL', error, { operation: 'shell', phase: 'setup' })); return; }
-      try { attachShellStream(stream, { onData, onInput, onError: cause => { if (!settled) { settled = true; reject(cause); } } }); } catch (cause) { settled = true; reject(cause); return; }
-      settled = true;
-      resolve(stream);
+      const completed = completeShellSetup({ error, stream, settled: () => settled, stop: control.stop, attach: value => attachShellStream(value, { onData, onInput, onError: cause => { if (!settled) { settled = true; reject(cause); } } }), resolve: value => { settled = true; control.settle(); resolve(value); }, reject: cause => { settled = true; reject(cause); } });
+      return completed;
     };
-    try { client.shell(handle); } catch (cause) { settled = true; control.stop(); reject(new SshError(`SSH shell error: ${cause.message || String(cause)}`, 'SSH_SHELL', cause, { operation: 'shell', phase: 'setup' })); }
+    requestShell(client, handle, error => { settled = true; control.stop(); reject(error); });
   });
 }
