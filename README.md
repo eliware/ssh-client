@@ -149,7 +149,7 @@ When multiple authentication settings are supplied, an explicit private key is p
 
 ### connect(options)
 
-Creates a reusable connection exposing `exec(commands, options?)`, `shell({ onData, onInput, timeout, signal })`, `upload({ localPath, remotePath, mode, timeout, signal })`, `download({ remotePath, localPath, timeout, signal })`, and `close()`. Transfers use SFTP. Shell sessions expose `close()` and a `completion` promise. The connection exposes `state` as `open`, `closing`, or `closed`; operation failures include structured context. `connect()` accepts the same connection options above except `commands`; TypeScript expresses this as `Omit<SshExecOptions, 'commands'>`, with commands supplied later to `exec()`. Authentication may use an explicit key, password, agent, or default key discovery, and lifecycle failures are reported through the returned operation promises. Host keys can be verified with a custom verifier, known-host records, or a trusted host CA; certificate principals must include the requested host name or IP address.
+Creates a reusable connection exposing `exec(commands, options?)`, `shell({ onData, onInput, timeout, signal, term, cols, rows })`, `upload({ localPath, remotePath, mode, timeout, signal })`, `download({ remotePath, localPath, timeout, signal })`, and `close()`. Shell calls request a pseudo-terminal; `term`, `cols`, and `rows` configure it and default to the transport's terminal defaults when omitted. Transfers use SFTP. Shell sessions expose `close()` and a `completion` promise. The connection exposes `state` as `open`, `closing`, or `closed`; operation failures include structured context. `connect()` accepts the same connection options above except `commands`; TypeScript expresses this as `Omit<SshExecOptions, 'commands'>`, with commands supplied later to `exec()`. Authentication may use an explicit key, password, agent, or default key discovery, and lifecycle failures are reported through the returned operation promises. Host keys can be verified with a custom verifier, known-host records, or a trusted host CA; certificate principals must include the requested host name or IP address.
 
 ### createHostVerifier(options)
 
@@ -235,7 +235,7 @@ export interface ShellSession extends NodeJS.ReadWriteStream {
 export interface SshConnection {
   readonly state: 'open' | 'closing' | 'closed';
   exec(commands: string[], options?: { signal?: AbortSignal; timeout?: number; commandTimeout?: number; cwd?: string; env?: Record<string, string | number | boolean>; envFallback?: 'posix' | 'powershell' | 'cmd'; pty?: boolean }): Promise<SshExecResult[]>;
-  shell(options?: { onData?: (data: Buffer) => void; onInput?: (stream: ShellSession) => void; timeout?: number; signal?: AbortSignal }): Promise<ShellSession>;
+  shell(options?: { onData?: (data: Buffer) => void; onInput?: (stream: ShellSession) => void; timeout?: number; signal?: AbortSignal; term?: string; cols?: number; rows?: number }): Promise<ShellSession>;
   upload(options: UploadOptions): Promise<void>;
   download(options: DownloadOptions): Promise<void>;
   close(): Promise<void>; // Force-destroys the transport after the close grace period.
