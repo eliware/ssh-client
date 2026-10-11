@@ -1,0 +1,10 @@
+version: "12.0"
+description: Defines product requirements for the SSH client.
+directives:
+  - id: E-280.0
+    dos:
+      - Expose SSH command, shell, and SFTP operations through the public library API.
+      - Verify SSH hosts with known-host records or an approved host certificate authority.
+      - Return structured command results and operation errors.
+    donts:
+      - Do not send private keys or passwords to unverified hosts.

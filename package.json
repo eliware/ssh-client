@@ -1,74 +1,113 @@
 {
-    "name": "@eliware/ssh-client",
-    "type": "module",
-    "version": "2.1.0",
-    "description": "An ESM-first Node.js SSH client with secure host verification, reusable connections, command execution, interactive shells, and SFTP transfers.",
-    "types": "index.d.ts",
-    "files": [
-        "index.mjs",
-        "src",
-        "index.d.ts",
-        "README.md",
-        "LICENSE",
-        "examples"
+  "name": "@eliware/ssh-client",
+  "version": "12.0.0",
+  "type": "module",
+  "description": "An ESM-first Node.js SSH client with secure host verification, reusable connections, command execution, interactive shells, and SFTP transfers.",
+  "keywords": [
+    "ssh",
+    "ssh-client",
+    "nodejs",
+    "private-key",
+    "esm",
+    "typescript",
+    "automation",
+    "remote-exec",
+    "sequential-commands"
+  ],
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "main": "./src/public-api.mjs",
+  "files": [
+    "src/",
+    "docs/",
+    "README.md",
+    "AGENTS.md",
+    "LICENSE",
+    "RELEASE_NOTES.md",
+    "examples/",
+    "specs/"
+  ],
+  "scripts": {
+    "test": "eliware-test",
+    "lint": "eliware-test --lint",
+    "audit": "eliware-test --audit",
+    "format": "eliware-test --format",
+    "format:check": "eliware-test --format-check",
+    "typecheck": "tsc --project tsconfig.json",
+    "pack": "eliware-test --pack"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "dependencies": {
+    "@eliware/ssh2": "1.17.0"
+  },
+  "devDependencies": {
+    "@eliware/test": "^11.0.0",
+    "typescript": "^7.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.mjs"
     ],
-    "exports": {
-        ".": {
-            "import": "./index.mjs",
-            "types": "./index.d.ts"
-        }
-    },
-    "scripts": {
-        "test": "eliware-test",
-        "lint": "eliware-test --lint",
-        "typecheck": "tsc --project tsconfig.json",
-        "pack": "npm pack --dry-run"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/eliware/ssh-client.git"
-    },
-    "keywords": [
-        "ssh",
-        "ssh-client",
-        "nodejs",
-        "private-key",
-        "esm",
-        "typescript",
-        "automation",
-        "remote-exec",
-        "sequential-commands"
+    "collectCoverageFrom": [
+      "src/**/*.mjs"
     ],
-    "author": "Eli Sterling, eliware.org <eli@eliware.org>",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/eliware/ssh-client/issues"
-    },
-    "homepage": "https://github.com/eliware/ssh-client#readme",
-    "devDependencies": {
-        "@eliware/test": "^6.0.1",
-        "typescript": "^7.0.2"
-    },
-    "dependencies": {
-        "@eliware/ssh2": "1.17.0"
-    },
-    "prettier": {
-      "printWidth": 100,
-      "tabWidth": 2,
-      "useTabs": false,
-      "semi": true,
-      "singleQuote": false,
-      "quoteProps": "as-needed",
-      "jsxSingleQuote": false,
-      "trailingComma": "all",
-      "bracketSpacing": true,
-      "bracketSameLine": false,
-      "arrowParens": "always",
-      "proseWrap": "preserve",
-      "endOfLine": "lf"
-    },
-    "eliware": {
-      "id": "E-280",
-      "apply": ["general", "library", "npm-published"]
+    "coverageReporters": [
+      "text",
+      "json-summary"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
     }
+  },
+  "prettier": {
+    "printWidth": 100,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": true,
+    "singleQuote": false,
+    "quoteProps": "as-needed",
+    "jsxSingleQuote": false,
+    "trailingComma": "all",
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "arrowParens": "always",
+    "proseWrap": "preserve",
+    "endOfLine": "lf"
+  },
+  "author": "Eliware <eliware@eliware.org>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eliware/ssh-client.git"
+  },
+  "homepage": "https://github.com/eliware/ssh-client#readme",
+  "bugs": {
+    "url": "https://github.com/eliware/ssh-client/issues"
+  },
+  "eliware": {
+    "id": "E-280",
+    "apply": [
+      "general",
+      "library",
+      "npm-published"
+    ]
+  },
+  "types": "./src/public-api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/public-api.d.ts",
+      "import": "./src/public-api.mjs"
+    }
+  }
 }

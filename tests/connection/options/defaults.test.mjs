@@ -1,7 +1,10 @@
-import { expect, test } from '@jest/globals';
-import { defaultConnectionPort, defaultConnectionTimeout } from '../../../src/connection/options/defaults.mjs';
+import { expect, test } from "@jest/globals";
+import {
+  defaultConnectionPort,
+  defaultConnectionTimeout,
+} from "../../../src/connection/options/defaults.mjs";
 
-test('provides connection defaults', () => {
+test("provides connection defaults", () => {
   expect(defaultConnectionPort()).toBe(22);
   expect(defaultConnectionPort(2222)).toBe(2222);
   expect(defaultConnectionTimeout()).toBe(10000);

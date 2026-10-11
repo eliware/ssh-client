@@ -3,6 +3,6 @@ export function attachShellCancellation(signal, onCancel) {
     onCancel();
     return false;
   }
-  signal?.addEventListener('abort', onCancel, { once: true });
+  signal?.addEventListener("abort", onCancel, { once: true });
   return true;
 }

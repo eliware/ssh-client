@@ -137,3 +137,15 @@ dist
 
 # jest
 .agentx*
+
+# Eliware repository-wide generated paths
+.git/
+generated/
+artifacts/
+test-results/
+**/build/
+**/.DS_Store
+**/Thumbs.db
+.env*
+!.env*.example
+

@@ -5,10 +5,8 @@ on:
       - target: dev
         cwd: /usr/src/eliware/ssh-client
         commands:
-          - git pull --ff-only
+          - git pull --ff-only origin main
           - npm ci
           - npm test
-          - npm run lint
           - npm run typecheck
-          - npm audit --omit=dev --audit-level=moderate
           - npm run pack

@@ -1,75 +1,94 @@
 # Release Notes
 
-## 2.1.0
+## Unreleased
 
-- Hardened reusable connection lifecycle handling, including validated ports and timeouts, early-close errors, timeout cleanup, and idempotent `close()`.
-- Added structured reusable connection operations with explicit lifecycle state and `SshError` operation/phase context.
-- Added per-operation timeout and cancellation support for command, shell, and SFTP operations.
-- Replaced positional transfer arguments with options objects supporting paths, modes, timeouts, and cancellation.
-- Added explicit shell-session completion and close semantics, and made command exit codes `number | null`.
-- Hardened command execution validation and cleanup, including bounded output, duration metadata, password forwarding, safe working-directory validation, and premature-close handling.
-- Hardened SFTP cleanup and standardized setup, transfer, and close errors.
-- Corrected the asynchronous host-verifier callback contract and added certificate-capable transport support through `@eliware/ssh2`.
-- Split the implementation and test suite into focused one-to-one modules while preserving the `sshExec()` compatibility API.
-- Added secure remote environment fallback handling and updated documentation, examples, and TypeScript declarations.
-- Added regression coverage for host certificates, lifecycle failures, and transfer cleanup.
+### Changed
 
-## 2.0.0
+- Prepare the package for v12 conventions.
 
-- Updated the shared `@eliware/test` development dependency to `2.0.0`.
-- Continued to enforce complete coverage and lint validation through the shared test tooling.
+## 12.0.0 — 2026-10-11
 
-## 1.2.0
+### Changed
 
-- Decomposed the implementation into focused single-responsibility modules under `src/`, with corresponding tests under `tests/`.
-- Added the reusable `connect()` API with sequential `exec()`, interactive `shell()`, SFTP `upload()`/`download()`, and `close()` operations while preserving `sshExec()` compatibility.
-- Added password authentication alongside private-key authentication.
-- Added configurable known-hosts loading and a shared OpenSSH verifier supporting exact, wildcard, negated, hashed, revoked, and `@cert-authority` entries.
-- Added direct cryptographic OpenSSH host-certificate verification, including signing CA matching, Ed25519/RSA/ECDSA signatures, host principals, validity intervals, and host-certificate type checks.
-- Added TypeScript declarations for the connection and host-verifier APIs.
-- Standardized test, lint, typecheck, packaging, audit, and cross-platform CI/release workflows; publishing is restricted to `v*` tags after Ubuntu and Windows validation.
+- Align package metadata, validation, documentation, and workflows with v12 conventions.
+- Add terminal settings to interactive shell options.
+- Remove SSH transport listeners when an operation ends.
 
-<!-- Intentional: this historical release date is retained for accurate chronology. -->
-## 1.1.8 — August 8, 2026
+## 2.1.0 — 2026-09-02
 
-- Fixed the connection timeout timer so it stops when SSH emits `ready`.
-- Prevented long-running commands from being misreported as connection timeouts.
-- Added regression coverage for commands that outlive `connectTimeout`.
-- Verification: tests with enforced coverage, lint, smoke test, and production audit pass.
+### Changed
 
-## 1.1.7 — August 7, 2026
+- Harden reusable connection lifecycle handling, ports, timeouts, and close operations.
+- Add structured reusable operations and per-operation cancellation.
+- Standardize command, shell, and SFTP validation and cleanup.
+- Add certificate-capable transport support through `@eliware/ssh2`.
 
-- Aligned repository structure, package metadata, validation scripts, CI, documentation, and package contents with Eliware library conventions.
-- Added TypeScript declaration checking and standardized package dry-run validation.
-- Moved tests and examples into convention-compliant directories.
-- Removed legacy CommonJS documentation and metadata.
-- Verification: tests with enforced coverage, lint, typecheck, pack, smoke test, and production audit pass.
+## 2.0.0 — 2026-08-24
 
-## 1.1.6
+### Changed
 
-- Corrected package metadata formatting and dependency declarations.
-- Verification: tests pass with 100% coverage and lint passes.
+- Update the shared `@eliware/test` development dependency.
+- Enforce complete coverage and lint validation through shared tooling.
 
-## 1.1.5
+## 1.2.0 — 2026-08-24
 
-- Removed the remaining Istanbul coverage-ignore directive from command completion handling.
-- Added connection termination and command execution error-path tests.
-- Verification: tests pass with 100% coverage and lint passes.
+### Added
 
-## 1.1.4
+- Add reusable connections, password authentication, known-hosts validation, and host certificates.
+- Add TypeScript declarations for the connection and host-verifier APIs.
 
-- Added manual workflow dispatch support.
-- Added private-key and key-path configuration, SSH-agent support, passphrases, host verification, known-host support, connection and command timeouts, structured errors, output limits, working directory, environment, PTY, shell, result metadata, declarations, examples, and tests.
-- Verification: tests pass with 100% coverage.
+### Changed
 
-## 1.1.3
+- Split implementation and tests into focused mirrored modules.
+- Standardize test, lint, typecheck, package, audit, and release workflows.
 
-- Added the standardized Oxlint command and Node.js 26 maintenance updates.
+## 1.1.8 — 2026-08-08
 
-## 1.1.2
+### Fixed
 
-- Standardized Node.js 26 CI, coverage scripts, AgentX ignore rules, dependencies, and lockfiles.
+- Stop the connection timer after SSH emits `ready`.
+- Prevent long commands from becoming connection timeouts.
 
-## 1.1.1
+## 1.1.7 — 2026-08-07
 
-- Initial documented release, December 9, 2025.
+### Changed
+
+- Align repository layout, metadata, validation, CI, docs, and package contents with Eliware library conventions.
+- Add declaration checks and standard package validation.
+
+## 1.1.6 — 2026-08-07
+
+### Fixed
+
+- Correct package metadata formatting and dependency declarations.
+
+## 1.1.5 — 2026-08-06
+
+### Fixed
+
+- Remove the final coverage exclusion from command completion.
+
+## 1.1.4 — 2026-08-06
+
+### Added
+
+- Add host verification, authentication, timeouts, shell, transfer, and command APIs.
+- Add declarations, examples, and tests.
+
+## 1.1.3 — 2026-08-06
+
+### Changed
+
+- Add the standard Oxlint command and Node.js 26 maintenance updates.
+
+## 1.1.2 — 2026-08-06
+
+### Changed
+
+- Standardize Node.js 26 CI, coverage scripts, and dependencies.
+
+## 1.1.1 — 2025-12-09
+
+### Added
+
+- Create the initial documented release.

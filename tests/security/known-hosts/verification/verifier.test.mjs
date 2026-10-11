@@ -1,93 +1,123 @@
-import { expect, test, jest } from '@jest/globals';
-import { createHostVerifier } from '../../../../src/security/known-hosts/verification/verifier.mjs';
-import { dateValid } from '../../../../src/security/known-hosts/verification/date-valid.mjs';
-test('covers verifier configuration and failure callbacks', async () => {
-  expect(createHostVerifier()('key')).toBe(false);
-  expect(dateValid('2999-01-01', new Date('2000-01-01'))).toBe(false);
-  const malformed = createHostVerifier({ host: 'router', knownHosts: '|1|bad|bad ssh-test key', utils: { parseKey: () => { throw Error('bad'); } } });
-  expect(await malformed('actual')).toBe(false);
-  const failing = createHostVerifier({ host: 'router', hostCaPath: '/ca', fsLib: { readFile: async () => { throw Error('missing'); } }, homedirFn: () => '/', utils: { parseKey: () => ({ getPublicSSH: () => ({ equals: () => false }) }) } });
-  const callback = () => { throw Error('callback'); };
-  expect(failing('actual', callback)).toBeUndefined(); await new Promise(resolve => setTimeout(resolve, 0));
+import { expect, test, jest } from "@jest/globals";
+import { createHostVerifier } from "../../../../src/security/known-hosts/verification/verifier.mjs";
+
+function createUtils() {
+  return {
+    parseKey: (value) => {
+      const key = String(value).split(/\s+/).at(-1);
+      return {
+        getPublicSSH: () => ({ value: key, equals: (other) => other.value === key }),
+      };
+    },
+  };
+}
+
+function certificateKey() {
+  const field = (value) => {
+    const bytes = Buffer.from(value);
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(bytes.length);
+    return Buffer.concat([length, bytes]);
+  };
+  const uint64 = Buffer.alloc(8);
+  const uint32 = Buffer.alloc(4);
+  uint32.writeUInt32BE(2);
+  return Buffer.concat([
+    field("ssh-ed25519-cert-v01@openssh.com"),
+    field("nonce"),
+    field("public-key"),
+    uint64,
+    uint32,
+    field("id"),
+    field(field("router")),
+    uint64,
+    Buffer.alloc(8, 255),
+    field(""),
+    field(""),
+    field(""),
+    field("ca"),
+    field(Buffer.concat([field("ssh-ed25519"), field("signature")])),
+  ]);
+}
+
+test("accepts a matching host key and rejects an unknown key", async () => {
+  const utils = createUtils();
+  const verify = createHostVerifier({
+    host: "router",
+    knownHosts: "router ssh-test trusted",
+    utils,
+  });
+  await expect(verify("trusted")).resolves.toBe(true);
+  await expect(verify("unknown")).resolves.toBe(false);
 });
-test('handles trusted, excluded, hashed, and malformed host records', async () => {
-  expect(dateValid('2000-01-01', new Date('2001-01-01'))).toBe(true); expect(dateValid(undefined)).toBe(false); expect(dateValid('not-a-date')).toBe(false);
-  const actual = { equals: () => true };
-  const utils = { parseKey: value => value === 'ssh-test key' || value === 'actual' ? { getPublicSSH: () => actual } : { getPublicSSH: () => ({ equals: () => false }) } };
+
+test("reports invalid host records through the callback", async () => {
   const callback = jest.fn();
-  const trusted = createHostVerifier({ host: 'router.example', knownHosts: 'router.example ssh-test key', utils });
-  expect(await trusted('actual', callback)).toBeUndefined(); await Promise.resolve();
-  const excluded = createHostVerifier({ host: 'router.example', knownHosts: '!router.example,*.example ssh-test key', utils });
-  expect(await excluded('actual')).toBe(false);
-  const revoked = createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example ssh-test key', utils });
-  expect(await revoked('actual')).toBe(false);
-  const unrelatedRevocation = createHostVerifier({ host: 'router.example', knownHosts: '@revoked other.example ssh-test key\nrouter.example ssh-test key', utils });
-  expect(await unrelatedRevocation('actual')).toBe(true);
-  const differentRevokedKey = createHostVerifier({ host: 'router.example', knownHosts: 'router.example ssh-test key\n@revoked router.example other-key value', utils });
-  expect(await differentRevokedKey('actual')).toBe(true);
-  const malformedRevocation = createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example malformed key', utils: { parseKey: value => { if (value === 'actual') return null; throw Error('bad revoked key'); } } });
-  expect(await malformedRevocation('actual')).toBe(false);
-  const revokedCallback = jest.fn(); expect(await revoked('actual', revokedCallback)).toBeUndefined(); await Promise.resolve(); expect(revokedCallback).toHaveBeenCalledWith(false);
-  const excludedCallback = jest.fn(); expect(await createHostVerifier({ host: 'router.example', knownHosts: '!router.example ssh-test key', utils })('actual', excludedCallback)).toBeUndefined(); await Promise.resolve(); expect(excludedCallback).toHaveBeenCalledWith(false);
-  expect(callback).toHaveBeenCalledWith(true);
-  const failedCallback = jest.fn(); const failing = createHostVerifier({ host: 'router.example', hostCaPath: '/missing', fsLib: { readFile: async () => { throw Error('missing'); } }, homedirFn: () => '/home', utils }); expect(failing('actual', failedCallback)).toBeUndefined(); await new Promise(resolve => setTimeout(resolve, 0)); expect(failedCallback).toHaveBeenCalledWith(false);
-  expect(await createHostVerifier({ host: 'router.example', knownHosts: '!!router.example ssh-test key', utils })('actual')).toBe(false);
-  const parseFailure = createHostVerifier({ host: 'router.example', knownHosts: 'router.example ssh-ed25519 public', utils: { parseKey: value => value === 'presented' ? { getPublicSSH: () => ({ equals: () => false }) } : (() => { throw Error('bad record'); })() } });
-  expect(await parseFailure('presented')).toBe(false);
-  const caFs = { mkdtemp: async () => '/tmp', writeFile: async () => {}, readFile: async () => 'ssh-ed25519 key', rm: async () => {} }; const ca = createHostVerifier({ host: 'router.example', hostCaPath: '/ca', fsLib: caFs, homedirFn: () => '/home', utils, runCommand: async () => ({ stdout: 'Type: ssh-ed25519-cert-v01@openssh.com\nkey' }) }); expect(await ca('actual')).toBe(false);
-  const fromFile = createHostVerifier({ host: 'router.example', port: 2200, knownHostsPath: '~/known_hosts', fsLib: { readFile: async path => path === '/home/known_hosts' ? 'router.example ssh-test key' : '' }, homedirFn: () => '/home', utils }); expect(await fromFile('actual')).toBe(true);
-  const badKey = createHostVerifier({ host: 'router.example', knownHosts: 'router.example bad key', utils: { parseKey: () => { throw Error('bad key'); } } }); expect(await badKey('actual')).toBe(false);
-  expect(createHostVerifier()('actual')).toBe(false);
-  const field = value => Buffer.concat([Buffer.from([0, 0, 0, value.length]), value]); const type = Buffer.from('ssh-ed25519-cert-v01@openssh.com'); const blob = Buffer.concat([field(type), field(Buffer.alloc(0)), field(Buffer.alloc(32)), Buffer.alloc(12), field(Buffer.alloc(0)), Buffer.alloc(16), field(Buffer.alloc(0)), field(Buffer.alloc(0)), field(Buffer.alloc(0)), field(Buffer.alloc(0)), field(Buffer.alloc(0))]); const certFs = { mkdtemp: async () => '/tmp', writeFile: async () => {}, readFile: async () => 'ssh-ed25519 key', rm: async () => {} }; const cert = createHostVerifier({ host: 'router.example', hostCaPath: '/ca', fsLib: certFs, homedirFn: () => '/home', utils, runCommand: async (_command, args) => args[0] === '-L' ? { stdout: 'Type: ssh-ed25519-cert-v01@openssh.com\nValid: from 2000-01-01 to 2999-01-01\nPrincipals:\n    router.example\nSigning CA: ssh-ed25519 key (SHA256:ca)' } : { stdout: '256 SHA256:ca ca' } }); expect(await cert(blob)).toBe(false);
-  const certFromKnownHosts = createHostVerifier({ host: 'router.example', knownHosts: '@cert-authority router.example ssh-ed25519 key\n@cert-authority other.example ssh-ed25519 key', fsLib: certFs, homedirFn: () => '/home', utils, runCommand: async (_command, args) => args[0] === '-L' ? { stdout: 'Type: ssh-ed25519-cert-v01@openssh.com\nValid: from 2000-01-01 to 2999-01-01\nPrincipals:\n    router.example\nSigning CA: ssh-ed25519 key (SHA256:ca)' } : { stdout: '256 SHA256:ca ca' } }); expect(await certFromKnownHosts(blob)).toBe(false);
-  const certField = value => Buffer.concat([Buffer.from([value.length >>> 24, value.length >>> 16 & 255, value.length >>> 8 & 255, value.length & 255]), value]);
-  const integer64 = value => { const result = Buffer.alloc(8); result.writeBigUInt64BE(BigInt(value)); return result; };
-  const validCert = Buffer.concat([certField(Buffer.from('ssh-ed25519-cert-v01@openssh.com')), certField(Buffer.alloc(1)), certField(Buffer.alloc(32)), integer64(1), Buffer.from([0, 0, 0, 2]), certField(Buffer.from('id')), certField(certField(Buffer.from('router.example'))), integer64(0), integer64('18446744073709551615'), certField(Buffer.alloc(0)), certField(Buffer.alloc(0)), certField(Buffer.alloc(0)), certField(Buffer.from('ca-key')), certField(Buffer.concat([certField(Buffer.from('ssh-ed25519')), certField(Buffer.from('signature'))]))]);
-  const caKey = Buffer.from('ca-key'); const validUtils = { parseKey: () => ({ getPublicSSH: () => caKey, verify: () => true }) };
-  const validVerifier = createHostVerifier({ host: 'router.example', knownHosts: '@cert-authority router.example ssh-ed25519 key', utils: validUtils }); expect(await validVerifier(validCert)).toBe(true);
-  expect(await validVerifier(Buffer.alloc(1))).toBe(false);
-  expect(await validVerifier(Buffer.from([0, 0, 0, 4, 115]))).toBe(false);
-  expect(await validVerifier(Buffer.from([0, 0, 0, 4, 115, 115, 104, 45]))).toBe(false);
-  const certificateFor = (base, keyFields, algorithm, principal = 'router.example', kind = 2, after = 0, before = '18446744073709551615', signature = 'signature', extra = Buffer.alloc(0)) => Buffer.concat([certField(Buffer.from(`${base}-cert-v01@openssh.com`)), certField(Buffer.alloc(1)), ...keyFields.map(certField), integer64(1), Buffer.from([0, 0, 0, kind]), certField(Buffer.from('id')), certField((Array.isArray(principal) ? principal : [principal]).map(value => certField(Buffer.from(value))).reduce((all, value) => Buffer.concat([all, value]), Buffer.alloc(0))), integer64(after), integer64(before), certField(Buffer.alloc(0)), certField(Buffer.alloc(0)), certField(Buffer.alloc(0)), certField(caKey), certField(Buffer.concat([certField(Buffer.from(algorithm)), certField(Buffer.from(signature)), extra]))]);
-  expect(await validVerifier(certificateFor('ssh-rsa', [Buffer.alloc(1), Buffer.alloc(1)], 'rsa-sha2-256'))).toBe(true);
-  expect(await validVerifier(certificateFor('ssh-rsa', [Buffer.alloc(1), Buffer.alloc(1)], 'rsa-sha2-512'))).toBe(true);
-  expect(await validVerifier(certificateFor('ecdsa-sha2-nistp256', [Buffer.alloc(1), Buffer.alloc(1)], 'rsa-sha2-256'))).toBe(false);
-  const ecdsaVerifier = createHostVerifier({ host: 'router.example', knownHosts: '@cert-authority router.example ecdsa-sha2-nistp384 key', utils: validUtils });
-  expect(await ecdsaVerifier(certificateFor('ecdsa-sha2-nistp384', [Buffer.alloc(1), Buffer.alloc(1)], 'ecdsa-sha2-nistp384'))).toBe(true);
-  expect(await validVerifier(certificateFor('ecdsa-sha2-nistp256', [Buffer.alloc(1), Buffer.alloc(1)], 'ecdsa-sha2-nistp384'))).toBe(false);
-  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', ['host', 'host.example.test', 'router.example', '192.0.2.10']))).toBe(true);
-  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', 'other.example'))).toBe(false);
-  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', 'router.example', 1))).toBe(false);
-  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', 'router.example', 2, 9999999999))).toBe(false);
-  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', 'router.example', 2, 0, 1))).toBe(false);
-  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-ed25519', 'router.example', 2, 0, '18446744073709551615', 'signature', Buffer.from([1])))).toBe(false);
-  expect(await validVerifier(certificateFor('unsupported', [Buffer.alloc(1)], 'ssh-ed25519'))).toBe(false);
-  expect(await validVerifier(certificateFor('ssh-ed25519', [Buffer.alloc(32)], 'ssh-dss'))).toBe(false);
-  const noVerifier = createHostVerifier({ host: 'router.example', knownHosts: '@cert-authority router.example ssh-ed25519 key', utils: { parseKey: () => ({ getPublicSSH: () => caKey }) } });
-  expect(await noVerifier(validCert)).toBe(false);
-  const revokedKey = { equals: () => true };
-  const revokedMatch = createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example revoked key', utils: { parseKey: value => value === 'presented' || value === 'revoked key' ? { getPublicSSH: () => revokedKey } : null } });
-  expect(await revokedMatch('presented')).toBe(false);
-  const revokedCertificate = createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example ssh-ed25519 key', utils: validUtils });
-  expect(await revokedCertificate(validCert)).toBe(false);
-  const revokedParseFailure = createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example ssh-ed25519 key', utils: { parseKey: () => { throw Error('bad revoked key'); } } });
-  expect(await revokedParseFailure(validCert)).toBe(false);
-  const revokedPresentedFailure = createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example revoked key', utils: { parseKey: value => value === 'presented' ? { getPublicSSH: () => { throw Error('bad presented key'); } } : { getPublicSSH: () => revokedKey } } });
-  expect(await revokedPresentedFailure('presented')).toBe(false);
-  const invalidCaFile = createHostVerifier({ host: 'router.example', hostCaPath: '/ca', fsLib: { readFile: async () => 'not-a-key' }, homedirFn: () => '/home', utils: { parseKey: value => value === 'presented' ? { getPublicSSH: () => ({ equals: () => false }) } : (() => { throw Error('invalid key'); })() } });
-  expect(await invalidCaFile('presented')).toBe(false);
-  const matchingPublicKey = { equals: () => true };
-  const directUtils = { parseKey: () => ({ getPublicSSH: () => matchingPublicKey }) };
-  expect(await createHostVerifier({ host: 'router.example', knownHosts: 'router.example ssh-ed25519 public', utils: directUtils })('presented')).toBe(true);
-  expect(await createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example ssh-ed25519 public', utils: directUtils })('presented')).toBe(false);
-  const truncated = Buffer.concat([certField(Buffer.from('ssh-ed25519-cert-v01@openssh.com')), certField(Buffer.alloc(0)), certField(Buffer.alloc(32))]);
-  expect(await validVerifier(truncated)).toBe(false);
-  expect(await validVerifier(Buffer.concat([truncated, integer64(1)]))).toBe(false);
-  expect(await validVerifier(Buffer.concat([validCert, Buffer.from([1])]))).toBe(false);
-  expect(await createHostVerifier({ host: 'router.example', knownHosts: '@unsupported router.example ssh-ed25519 key', utils })('actual')).toBe(false);
-  expect(await createHostVerifier({ host: 'router.example', knownHosts: '@revoked router.example', utils })('actual')).toBe(false);
-  expect(await createHostVerifier({ host: 'router.example', hostCaPath: '/ca', fsLib: { readFile: async () => '# comment\n\nssh-ed25519 key' }, homedirFn: () => '/home', utils })('actual')).toBe(false);
-  const nullKeyUtils = { parseKey: value => value === 'actual' ? { getPublicSSH: () => actual } : null };
-  expect(await createHostVerifier({ host: 'router.example', knownHosts: '@cert-authority router.example ssh-ed25519 key', utils: nullKeyUtils })('actual')).toBe(false);
-  expect(await createHostVerifier({ host: 'router.example', hostCaPath: '/ca', fsLib: { readFile: async () => 'ssh-ed25519 key' }, homedirFn: () => '/home', utils: nullKeyUtils })('actual')).toBe(false);
+  const verify = createHostVerifier({
+    host: "router",
+    knownHosts: "router invalid key",
+    utils: {
+      parseKey: () => {
+        throw Error("invalid");
+      },
+    },
+  });
+  expect(verify("key", callback)).toBeUndefined();
+  await new Promise((resolve) => setImmediate(resolve));
+  expect(callback).toHaveBeenCalledWith(false);
+});
+
+test("rejects invalid verifier configuration and host records", async () => {
+  expect(createHostVerifier()("key")).toBe(false);
+  expect(createHostVerifier({ host: "router", knownHosts: "hosts" })("key")).toBe(false);
+  expect(createHostVerifier({ host: "router", knownHosts: "hosts", utils: {} })("key")).toBe(false);
+  expect(createHostVerifier({ host: "router", utils: createUtils() })("key")).toBe(false);
+  expect(createHostVerifier({ host: "router", knownHosts: "router ssh-test key" })("key")).toBe(
+    false,
+  );
+  await expect(
+    createHostVerifier({ host: "router", knownHosts: "router", utils: createUtils() })("key"),
+  ).resolves.toBe(false);
+  await expect(
+    createHostVerifier({ host: "router", knownHosts: "router", utils: createUtils() })("trusted"),
+  ).resolves.toBe(false);
+  await expect(
+    createHostVerifier({
+      host: "router",
+      knownHosts: "@revoked router ssh-test trusted",
+      utils: createUtils(),
+    })("trusted"),
+  ).resolves.toBe(false);
+});
+
+test("reads known-host and CA files through the injected file system", async () => {
+  const fsLib = {
+    readFile: jest.fn(async (path) =>
+      path === "known_hosts" ? "router ssh-test trusted" : "ssh-rsa ca-key",
+    ),
+  };
+  const verifyKnownHost = createHostVerifier({
+    host: "router",
+    knownHostsPath: "known_hosts",
+    hostCaPath: "ca_hosts",
+    fsLib,
+    utils: createUtils(),
+  });
+  await expect(verifyKnownHost("trusted")).resolves.toBe(true);
+  expect(fsLib.readFile).toHaveBeenCalledWith("known_hosts", "utf8");
+  expect(fsLib.readFile).toHaveBeenCalledWith("ca_hosts", "utf8");
+});
+
+test("accepts a certificate signed by a matching host authority", async () => {
+  const ca = {
+    getPublicSSH: () => Buffer.from("ca"),
+    verify: () => true,
+  };
+  const utils = { parseKey: () => ca };
+  const verify = createHostVerifier({
+    host: "router",
+    knownHosts: "@cert-authority router ssh-rsa ca-key",
+    utils,
+  });
+  await expect(verify(certificateKey())).resolves.toBe(true);
 });

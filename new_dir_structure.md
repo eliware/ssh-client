@@ -62,84 +62,84 @@ and strict validation have all been checked.
 
 ### Connection
 
-| Current file | Methods/functions | Responsibility currently present |
-| --- | --- | --- |
-| `src/connection/adapter/reusable.mjs` | `createReusableClientAdapter` | Transport adapter methods and event forwarding |
-| `src/connection/lifecycle/client/api.mjs` | `createReusableClientApi` | Reusable API state, operation delegation, shell/SFTP/exec methods |
-| `src/connection/lifecycle/client/close.mjs` | `closeConnection` | Close request, close events, forced destruction, state updates |
-| `src/connection/lifecycle/client/connect.mjs` | `connect` | Public connection orchestration |
+| Current file                                    | Methods/functions                   | Responsibility currently present                                        |
+| ----------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------- |
+| `src/connection/adapter/reusable.mjs`           | `createReusableClientAdapter`       | Transport adapter methods and event forwarding                          |
+| `src/connection/lifecycle/client/api.mjs`       | `createReusableClientApi`           | Reusable API state, operation delegation, shell/SFTP/exec methods       |
+| `src/connection/lifecycle/client/close.mjs`     | `closeConnection`                   | Close request, close events, forced destruction, state updates          |
+| `src/connection/lifecycle/client/connect.mjs`   | `connect`                           | Public connection orchestration                                         |
 | `src/connection/lifecycle/client/establish.mjs` | `stop` (private), `establishClient` | Client construction, connect call, ready/error/close lifecycle, timeout |
-| `src/connection/lifecycle/client/options.mjs` | `prepareConnection` | Defaults, key loading, host verification, option preparation |
-| `src/connection/validation.mjs` | `validateConnectionOptions` | Connection option validation and defaulting |
+| `src/connection/lifecycle/client/options.mjs`   | `prepareConnection`                 | Defaults, key loading, host verification, option preparation            |
+| `src/connection/validation.mjs`                 | `validateConnectionOptions`         | Connection option validation and defaulting                             |
 
 ### Execution
 
-| Current file | Methods/functions | Responsibility currently present |
-| --- | --- | --- |
-| `src/exec/commands/channel.mjs` | `attachChannel` | stdout/stderr channel event wiring |
-| `src/exec/commands/environment/command.mjs` | `buildCommand` | Command construction with cwd/environment |
-| `src/exec/commands/invoke.mjs` | `invokeCommand` | Transport command invocation and callback setup |
-| `src/exec/commands/output/collector.mjs` | `createOutputCollector` | Output accumulation, byte limits, truncation |
-| `src/exec/commands/output/decode.mjs` | `fitBytes` | Byte-limit slicing/decoding |
-| `src/exec/commands/result.mjs` | `createCommandResult` | Command result object construction |
-| `src/exec/commands/timeout.mjs` | `startCommandTimeout` | Active command timeout and cancellation |
-| `src/exec/connection/errors.mjs` | `connectionError` | Connection error normalization |
-| `src/exec/connection/events.mjs` | `attachConnectionEvents` | Transport lifecycle event wiring |
-| `src/exec/connection/timeout.mjs` | `startConnectionTimeout` | Connection timeout timer |
-| `src/exec/options/validation.mjs` | `adaptHostVerifier`, `validateOptions` | Execution option validation and verifier adaptation |
-| `src/exec/runner/pipeline/channel-runner.mjs` | `runCommand` | One command’s pipeline orchestration |
-| `src/exec/runner/pipeline/completion.mjs` | `completeExecution` | Final execution cleanup and promise resolution |
-| `src/exec/runner/pipeline/errors.mjs` | `channelError`, `commandError`, `stderrError` | Execution error construction |
-| `src/exec/runner/pipeline/execute.mjs` | `sshExec` | Public execution coordinator |
-| `src/exec/runner/pipeline/finisher.mjs` | `createFinisher` | Single-settlement guard and completion dispatch |
-| `src/exec/runner/pipeline/options.mjs` | `prepareExecution` | Execution defaults and key/config preparation |
-| `src/exec/runner/pipeline/queue.mjs` | `createCommandQueue` | Sequential command scheduling and cancellation |
-| `src/exec/runner/pipeline/settlement.mjs` | `claimSettlement` | Settlement state transition |
-| `src/exec/runner/pipeline/transport.mjs` | `resolveClientClass` | Default/custom transport selection |
+| Current file                                  | Methods/functions                             | Responsibility currently present                    |
+| --------------------------------------------- | --------------------------------------------- | --------------------------------------------------- |
+| `src/exec/commands/channel.mjs`               | `attachChannel`                               | stdout/stderr channel event wiring                  |
+| `src/exec/commands/environment/command.mjs`   | `buildCommand`                                | Command construction with cwd/environment           |
+| `src/exec/commands/invoke.mjs`                | `invokeCommand`                               | Transport command invocation and callback setup     |
+| `src/exec/commands/output/collector.mjs`      | `createOutputCollector`                       | Output accumulation, byte limits, truncation        |
+| `src/exec/commands/output/decode.mjs`         | `fitBytes`                                    | Byte-limit slicing/decoding                         |
+| `src/exec/commands/result.mjs`                | `createCommandResult`                         | Command result object construction                  |
+| `src/exec/commands/timeout.mjs`               | `startCommandTimeout`                         | Active command timeout and cancellation             |
+| `src/exec/connection/errors.mjs`              | `connectionError`                             | Connection error normalization                      |
+| `src/exec/connection/events.mjs`              | `attachConnectionEvents`                      | Transport lifecycle event wiring                    |
+| `src/exec/connection/timeout.mjs`             | `startConnectionTimeout`                      | Connection timeout timer                            |
+| `src/exec/options/validation.mjs`             | `adaptHostVerifier`, `validateOptions`        | Execution option validation and verifier adaptation |
+| `src/exec/runner/pipeline/channel-runner.mjs` | `runCommand`                                  | One command’s pipeline orchestration                |
+| `src/exec/runner/pipeline/completion.mjs`     | `completeExecution`                           | Final execution cleanup and promise resolution      |
+| `src/exec/runner/pipeline/errors.mjs`         | `channelError`, `commandError`, `stderrError` | Execution error construction                        |
+| `src/exec/runner/pipeline/execute.mjs`        | `sshExec`                                     | Public execution coordinator                        |
+| `src/exec/runner/pipeline/finisher.mjs`       | `createFinisher`                              | Single-settlement guard and completion dispatch     |
+| `src/exec/runner/pipeline/options.mjs`        | `prepareExecution`                            | Execution defaults and key/config preparation       |
+| `src/exec/runner/pipeline/queue.mjs`          | `createCommandQueue`                          | Sequential command scheduling and cancellation      |
+| `src/exec/runner/pipeline/settlement.mjs`     | `claimSettlement`                             | Settlement state transition                         |
+| `src/exec/runner/pipeline/transport.mjs`      | `resolveClientClass`                          | Default/custom transport selection                  |
 
 ### Environment, keys, and common values
 
-| Current file | Methods/functions | Responsibility currently present |
-| --- | --- | --- |
-| `src/environment.mjs` | `quotePosix` (private), `quotePowerShell` (private), `quoteShell`, `withEnvironment` | Shell quoting and environment command rendering |
-| `src/errors.mjs` | `SshError` | Public error type |
-| `src/keys.mjs` | `loadKey` | Inline/path/fallback key selection and filesystem reads |
-| `src/paths.mjs` | `expandPath` | Home-relative path expansion |
+| Current file          | Methods/functions                                                                    | Responsibility currently present                        |
+| --------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `src/environment.mjs` | `quotePosix` (private), `quotePowerShell` (private), `quoteShell`, `withEnvironment` | Shell quoting and environment command rendering         |
+| `src/errors.mjs`      | `SshError`                                                                           | Public error type                                       |
+| `src/keys.mjs`        | `loadKey`                                                                            | Inline/path/fallback key selection and filesystem reads |
+| `src/paths.mjs`       | `expandPath`                                                                         | Home-relative path expansion                            |
 
 ### Host verification
 
-| Current file | Methods/functions | Responsibility currently present |
-| --- | --- | --- |
-| `src/security/known-hosts/certificate.mjs` | `principals` (private), `parseCertificate` | SSH certificate binary parsing |
-| `src/security/known-hosts/encoding.mjs` | `readString`, `encodeString`, `readUint64`, `readUint32` | SSH binary encoding primitives |
-| `src/security/known-hosts/hashed.mjs` | `matchesHashed` | Hashed known-host matching |
-| `src/security/known-hosts/matching.mjs` | `matches`, `matchesList` | Plain host-pattern matching |
-| `src/security/known-hosts/verification/callback.mjs` | `finishVerification` | Verifier callback completion |
-| `src/security/known-hosts/verification/certificate-verification.mjs` | `verifyCertificate` | Certificate trust and validity policy |
-| `src/security/known-hosts/verification/keys.mjs` | `sameKey` | Host-key equivalence policy |
-| `src/security/known-hosts/verification/records.mjs` | `readAuthorities`, `evaluateRecords` | Known-host record loading and evaluation |
-| `src/security/known-hosts/verification/verifier.mjs` | `dateValid`, `createHostVerifier` | Public verifier orchestration and date policy |
-| `src/security/known-hosts/wildcard.mjs` | `matchesWildcard` | Wildcard host matching |
+| Current file                                                         | Methods/functions                                        | Responsibility currently present              |
+| -------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------- |
+| `src/security/known-hosts/certificate.mjs`                           | `principals` (private), `parseCertificate`               | SSH certificate binary parsing                |
+| `src/security/known-hosts/encoding.mjs`                              | `readString`, `encodeString`, `readUint64`, `readUint32` | SSH binary encoding primitives                |
+| `src/security/known-hosts/hashed.mjs`                                | `matchesHashed`                                          | Hashed known-host matching                    |
+| `src/security/known-hosts/matching.mjs`                              | `matches`, `matchesList`                                 | Plain host-pattern matching                   |
+| `src/security/known-hosts/verification/callback.mjs`                 | `finishVerification`                                     | Verifier callback completion                  |
+| `src/security/known-hosts/verification/certificate-verification.mjs` | `verifyCertificate`                                      | Certificate trust and validity policy         |
+| `src/security/known-hosts/verification/keys.mjs`                     | `sameKey`                                                | Host-key equivalence policy                   |
+| `src/security/known-hosts/verification/records.mjs`                  | `readAuthorities`, `evaluateRecords`                     | Known-host record loading and evaluation      |
+| `src/security/known-hosts/verification/verifier.mjs`                 | `dateValid`, `createHostVerifier`                        | Public verifier orchestration and date policy |
+| `src/security/known-hosts/wildcard.mjs`                              | `matchesWildcard`                                        | Wildcard host matching                        |
 
 ### Shell and transfer
 
-| Current file | Methods/functions | Responsibility currently present |
-| --- | --- | --- |
-| `src/shell.mjs` | `openShell` | Shell setup, lifecycle, timeout, cancellation, and result orchestration |
-| `src/shell/control.mjs` | `createShellControl` | Shell cancellation and timeout control |
-| `src/shell/stream.mjs` | `attachShellStream` | Shell stream event and input/output wiring |
-| `src/shell/validation.mjs` | `validateShellTimeout` | Shell timeout validation |
-| `src/transfer.mjs` | `upload`, `download` | Public transfer operation adapters |
-| `src/transfer/session.mjs` | `runTransfer` | SFTP acquisition, transfer lifecycle, timeout, errors, cleanup, settlement |
-| `src/transfer/validation.mjs` | `validateTransferOptions` | Transfer option validation |
+| Current file                  | Methods/functions         | Responsibility currently present                                           |
+| ----------------------------- | ------------------------- | -------------------------------------------------------------------------- |
+| `src/shell.mjs`               | `openShell`               | Shell setup, lifecycle, timeout, cancellation, and result orchestration    |
+| `src/shell/control.mjs`       | `createShellControl`      | Shell cancellation and timeout control                                     |
+| `src/shell/stream.mjs`        | `attachShellStream`       | Shell stream event and input/output wiring                                 |
+| `src/shell/validation.mjs`    | `validateShellTimeout`    | Shell timeout validation                                                   |
+| `src/transfer.mjs`            | `upload`, `download`      | Public transfer operation adapters                                         |
+| `src/transfer/session.mjs`    | `runTransfer`             | SFTP acquisition, transfer lifecycle, timeout, errors, cleanup, settlement |
+| `src/transfer/validation.mjs` | `validateTransferOptions` | Transfer option validation                                                 |
 
 ### Reusable operations and public API
 
-| Current file | Methods/functions | Responsibility currently present |
-| --- | --- | --- |
-| `src/operations/reusable.mjs` | `reusableExec`, `reusableUpload`, `reusableDownload` | Reusable-client operation adapters |
-| `src/public-api.mjs` | `SshError`, `loadKey`, `expandPath`, `createHostVerifier`, `sshExec`, `connect`, `upload`, `download` | Public export bindings |
-| `index.mjs` | `SshError`, `createHostVerifier`, `sshExec`, `connect` | Package entrypoint export bindings |
+| Current file                  | Methods/functions                                                                                     | Responsibility currently present   |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `src/operations/reusable.mjs` | `reusableExec`, `reusableUpload`, `reusableDownload`                                                  | Reusable-client operation adapters |
+| `src/public-api.mjs`          | `SshError`, `loadKey`, `expandPath`, `createHostVerifier`, `sshExec`, `connect`, `upload`, `download` | Public export bindings             |
+| `index.mjs`                   | `SshError`, `createHostVerifier`, `sshExec`, `connect`                                                | Package entrypoint export bindings |
 
 ## Historical target tree
 

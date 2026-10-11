@@ -1,4 +1,4 @@
-import ssh2 from '@eliware/ssh2';
+import ssh2 from "@eliware/ssh2";
 
 const { Client } = ssh2;
 

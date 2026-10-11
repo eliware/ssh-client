@@ -1,7 +1,8 @@
-import { readString } from '../encoding/read-string.mjs';
+import { readString } from "../encoding/read-string.mjs";
 
 export function readPrincipals(value) {
-  const result = []; let offset = 0;
+  const result = [];
+  let offset = 0;
   while (offset < value.length) {
     const entry = readString(value, offset);
     result.push(entry.value.toString());

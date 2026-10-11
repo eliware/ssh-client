@@ -1,7 +1,7 @@
-import { claimSettlement } from './settlement.mjs';
+import { claimSettlement } from "./settlement.mjs";
 
 export function createFinisher(state, complete) {
-  return error => {
+  return (error) => {
     if (!claimSettlement(state)) return;
     complete(error);
   };
