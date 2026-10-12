@@ -150,6 +150,19 @@ test("does not start a timeout when ready fires during listener setup", async ()
   }
 });
 
+test("starts the transport before a queued ready event resolves", async () => {
+  class QueuedReadyClient extends EventClient {
+    connect = jest.fn();
+    once(event, callback) {
+      super.once(event, callback);
+      if (event === "ready") queueMicrotask(callback);
+      return this;
+    }
+  }
+  const client = await establishClient(QueuedReadyClient, {}, 100);
+  expect(client.connect).toHaveBeenCalledTimes(1);
+});
+
 test.each(["error", "close"])("rejects when the transport emits %s before ready", async (event) => {
   class EarlyEventClient extends EventClient {
     connect() {
