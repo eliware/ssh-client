@@ -48,10 +48,12 @@ test("fails safely for malformed presented keys", () => {
 });
 
 test("uses the certificate public key when the presented key is a certificate", () => {
-  const parseKey = jest.fn();
+  const parsed = { getPublicSSH: () => Buffer.from("parsed public key") };
+  const parseKey = jest.fn(() => parsed);
   const result = normalizePresentedKey(certificateKey(), { parseKey });
   expect(result.certificate.base).toBe("ssh-ed25519");
-  expect(result.actual.getPublicSSH()).toEqual(
+  expect(result.actual).toBe(parsed);
+  expect(parseKey).toHaveBeenCalledWith(
     Buffer.concat([
       Buffer.from([0, 0, 0, 11]),
       Buffer.from("ssh-ed25519"),
@@ -59,5 +61,12 @@ test("uses the certificate public key when the presented key is a certificate", 
       Buffer.from("public-key"),
     ]),
   );
-  expect(parseKey).not.toHaveBeenCalled();
+});
+
+test("rejects a certificate with an invalid public key", () => {
+  expect(() =>
+    normalizePresentedKey(certificateKey(), {
+      parseKey: () => Error("bad public key"),
+    }),
+  ).toThrow("invalid presented SSH key");
 });

@@ -8,6 +8,7 @@ export function normalizePresentedKey(key, utils) {
   } catch {
     certificate = null;
   }
-  const actual = certificate ? { getPublicSSH: () => certificate.hostKey } : utils.parseKey(key);
+  const actual = utils.parseKey(certificate ? certificate.hostKey : key);
+  if (!actual?.getPublicSSH) throw new Error("invalid presented SSH key");
   return { actual, certificate };
 }
