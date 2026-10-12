@@ -58,11 +58,14 @@ and strict validation have all been checked.
 - [x] No legacy multi-responsibility modules remain; remaining public files are explicit coordinators over focused collaborators.
 - [x] Final strict validation completed after all migrations: tests, lint, typecheck, audit, pack, diff check, and Codescope all pass without exemptions.
 
-## Current method inventory
+## Historical method inventory
+
+This inventory records an earlier repository layout. Do not use it to locate current modules.
+Use the files under `src/` and `tests/` as the current inventory.
 
 ### Connection
 
-| Current file                                    | Methods/functions                   | Responsibility currently present                                        |
+| File at that time                               | Methods/functions                   | Responsibility at that time                                             |
 | ----------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------- |
 | `src/connection/adapter/reusable.mjs`           | `createReusableClientAdapter`       | Transport adapter methods and event forwarding                          |
 | `src/connection/lifecycle/client/api.mjs`       | `createReusableClientApi`           | Reusable API state, operation delegation, shell/SFTP/exec methods       |
@@ -74,7 +77,7 @@ and strict validation have all been checked.
 
 ### Execution
 
-| Current file                                  | Methods/functions                             | Responsibility currently present                    |
+| File at that time                             | Methods/functions                             | Responsibility at that time                         |
 | --------------------------------------------- | --------------------------------------------- | --------------------------------------------------- |
 | `src/exec/commands/channel.mjs`               | `attachChannel`                               | stdout/stderr channel event wiring                  |
 | `src/exec/commands/environment/command.mjs`   | `buildCommand`                                | Command construction with cwd/environment           |
@@ -99,7 +102,7 @@ and strict validation have all been checked.
 
 ### Environment, keys, and common values
 
-| Current file          | Methods/functions                                                                    | Responsibility currently present                        |
+| File at that time     | Methods/functions                                                                    | Responsibility at that time                             |
 | --------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------- |
 | `src/environment.mjs` | `quotePosix` (private), `quotePowerShell` (private), `quoteShell`, `withEnvironment` | Shell quoting and environment command rendering         |
 | `src/errors.mjs`      | `SshError`                                                                           | Public error type                                       |
@@ -108,7 +111,7 @@ and strict validation have all been checked.
 
 ### Host verification
 
-| Current file                                                         | Methods/functions                                        | Responsibility currently present              |
+| File at that time                                                    | Methods/functions                                        | Responsibility at that time                   |
 | -------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------- |
 | `src/security/known-hosts/certificate.mjs`                           | `principals` (private), `parseCertificate`               | SSH certificate binary parsing                |
 | `src/security/known-hosts/encoding.mjs`                              | `readString`, `encodeString`, `readUint64`, `readUint32` | SSH binary encoding primitives                |
@@ -123,7 +126,7 @@ and strict validation have all been checked.
 
 ### Shell and transfer
 
-| Current file                  | Methods/functions         | Responsibility currently present                                           |
+| File at that time             | Methods/functions         | Responsibility at that time                                                |
 | ----------------------------- | ------------------------- | -------------------------------------------------------------------------- |
 | `src/shell.mjs`               | `openShell`               | Shell setup, lifecycle, timeout, cancellation, and result orchestration    |
 | `src/shell/control.mjs`       | `createShellControl`      | Shell cancellation and timeout control                                     |
@@ -135,7 +138,7 @@ and strict validation have all been checked.
 
 ### Reusable operations and public API
 
-| Current file                  | Methods/functions                                                                                     | Responsibility currently present   |
+| File at that time             | Methods/functions                                                                                     | Responsibility at that time        |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------- |
 | `src/operations/reusable.mjs` | `reusableExec`, `reusableUpload`, `reusableDownload`                                                  | Reusable-client operation adapters |
 | `src/public-api.mjs`          | `SshError`, `loadKey`, `expandPath`, `createHostVerifier`, `sshExec`, `connect`, `upload`, `download` | Public export bindings             |
