@@ -10,7 +10,10 @@ export function evaluateRecords(text, hosts, actual, cert, utils) {
     const first = fields[0];
     if (!first || first.startsWith("#")) continue;
     const marked = first.startsWith("@");
-    const patterns = (marked ? fields[1] : first).split(",");
+    const patternField = marked ? fields[1] : first;
+    if (!patternField) return { invalid: true };
+    const patterns = patternField.split(",");
+    if (!matchesList(patterns, hosts)) continue;
     if (fields.length < (marked ? 4 : 3)) return { invalid: true };
     const marker = marked ? first : "";
     if (marked && !["@revoked", "@cert-authority"].includes(marker)) return { invalid: true };
@@ -23,14 +26,14 @@ export function evaluateRecords(text, hosts, actual, cert, utils) {
       }
     }
     if (marker === "@revoked") {
-      if (matchesList(patterns, hosts)) revoked.push(record);
+      revoked.push(record);
       continue;
     }
     if (marker === "@cert-authority") {
-      if (matchesList(patterns, hosts)) authorities.push(record);
+      authorities.push(record);
       continue;
     }
-    if (matchesList(patterns, hosts) && sameKey(record, actual, utils)) accepted = !cert;
+    if (sameKey(record, actual, utils)) accepted = !cert;
   }
   return { accepted, authorities, revoked, invalid: false };
 }

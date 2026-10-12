@@ -12,7 +12,7 @@ test("builds commands with environment fallbacks and safe quoting", () => {
       env: { KNIT_TEST: "yes" },
       envFallback: "powershell",
     }),
-  ).toContain("Set-Location 'C:\\temp\\dir'");
+  ).toBe("$env:KNIT_TEST='yes'; Set-Location 'C:\\temp\\dir'; run");
   expect(buildCommand("run", { cwd: "/tmp" })).toBe("cd '/tmp' && run");
   expect(buildCommand("run", { cwd: "C:\\temp", envFallback: "cmd" })).toContain(
     'cd /d "C:\\temp"',

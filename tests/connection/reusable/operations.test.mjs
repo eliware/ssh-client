@@ -100,3 +100,21 @@ test.each([
   await expect(result).rejects.toMatchObject({ code });
   expect(state.value).toBe(code === "SSH_TIMEOUT" ? "closed" : "open");
 });
+
+test("closes state when shell setup throws synchronously", async () => {
+  const failure = Object.assign(Error("setup timeout"), { code: "SSH_TIMEOUT" });
+  openShell.mockImplementationOnce(() => {
+    throw failure;
+  });
+  const state = {
+    value: "open",
+    isOpen() {
+      return this.value === "open";
+    },
+    set(value) {
+      this.value = value;
+    },
+  };
+  await expect(createOperations(state).shell()).rejects.toBe(failure);
+  expect(state.value).toBe("closed");
+});

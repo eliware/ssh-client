@@ -9,10 +9,12 @@ export function createReusableOperations({ client, options, state, serialize }) 
     if (!state.isOpen()) return unavailable(operation);
     const invoke = () =>
       state.isOpen()
-        ? action().catch((error) => {
-            closeOnTransportFailure(state, error);
-            throw error;
-          })
+        ? Promise.resolve()
+            .then(action)
+            .catch((error) => {
+              closeOnTransportFailure(state, error);
+              throw error;
+            })
         : unavailable(operation);
     return queued ? serialize(invoke) : invoke();
   };
