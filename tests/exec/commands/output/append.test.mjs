@@ -47,3 +47,19 @@ test("closes the channel when one chunk reaches the byte limit", () => {
   expect(state.truncated).toBe(true);
   expect(channel.close).toHaveBeenCalledTimes(1);
 });
+
+test("marks a multibyte chunk as truncated when it exceeds the byte limit", () => {
+  const state = {
+    stdout: "",
+    stderr: "",
+    merged: "",
+    stdoutBytes: 0,
+    stderrBytes: 0,
+    truncated: false,
+  };
+  const channel = { close: jest.fn() };
+  appendOutput(state, "stdout", "€", 2, () => channel);
+  expect(state.stdout).toBe("");
+  expect(state.truncated).toBe(true);
+  expect(channel.close).toHaveBeenCalledTimes(1);
+});
