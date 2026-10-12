@@ -26,6 +26,28 @@ test("normalizes connection errors and closes during command setup", async () =>
   expect(finish).toHaveBeenCalledWith(expect.objectContaining({ code: "SSH_CONNECTION" }));
 });
 
+test("rejects a close during command setup when the channel callback never arrives", async () => {
+  const finish = jest.fn();
+  let deferred = false;
+  const events = createExecutionConnectionEvents({
+    getConn: () => undefined,
+    finish,
+    isEnded: () => false,
+    isSettled: () => false,
+    setTransportClosed: jest.fn(),
+    isCommandStarting: () => true,
+    isCloseDeferred: () => deferred,
+    deferClose: () => {
+      deferred = true;
+    },
+  });
+  events.onClosed();
+  expect(finish).not.toHaveBeenCalled();
+  await new Promise((resolve) => setImmediate(resolve));
+  expect(finish).toHaveBeenCalledTimes(1);
+  expect(finish).toHaveBeenCalledWith(expect.objectContaining({ code: "SSH_CONNECTION" }));
+});
+
 test("ends an unexpectedly closed idle connection", () => {
   const finish = jest.fn();
   const end = jest.fn();
