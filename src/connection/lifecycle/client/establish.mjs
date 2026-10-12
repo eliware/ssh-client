@@ -35,6 +35,7 @@ export function establishClient(ClientClass, config, timeout) {
     try {
       validateClientTransport(client);
     } catch (cause) {
+      stopClient(client);
       return finish(cause);
     }
     ready = () => finish();

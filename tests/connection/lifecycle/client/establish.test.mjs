@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, jest, test } from "@jest/globals";
 import { connect } from "../../../../src/connection/lifecycle/client/connect.mjs";
 import { establishClient } from "../../../../src/connection/lifecycle/client/establish.mjs";
 
@@ -64,9 +64,16 @@ test("rejects when the transport connect call throws", async () => {
 });
 
 test("rejects transports missing required methods", async () => {
-  await expect(establishClient(class {}, {}, 100)).rejects.toMatchObject({
+  const end = jest.fn();
+  class InvalidClient {
+    end() {
+      end();
+    }
+  }
+  await expect(establishClient(InvalidClient, {}, 100)).rejects.toMatchObject({
     code: "SSH_CONNECTION",
   });
+  expect(end).toHaveBeenCalledTimes(1);
 });
 
 test("resolves when the transport becomes ready", async () => {
