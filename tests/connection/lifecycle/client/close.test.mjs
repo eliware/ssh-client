@@ -72,6 +72,7 @@ test("rejects close when the transport emits a shutdown error", async () => {
     code: "SSH_CONNECTION",
     context: { operation: "close", phase: "cleanup" },
   });
+  expect(client.state).toBe("closed");
 });
 
 test("forces close fallback when destroy is unavailable", async () => {

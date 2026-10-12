@@ -31,6 +31,7 @@ Trust a certificate only when a trusted CA signed it.
 Match its principal to the host name or `[host]:port` value.
 Check that its validity period includes the current time.
 The client rejects certificates with critical options because it does not enforce them.
+The client supports Ed25519, RSA SHA-2, and ECDSA certificate signatures.
 
 ## Use a custom verifier
 

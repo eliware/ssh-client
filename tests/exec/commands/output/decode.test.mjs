@@ -10,4 +10,6 @@ test("fits UTF-8 output without returning partial characters", () => {
 test("returns an empty string when no valid prefix fits", () => {
   expect(fitBytes(Buffer.from([0xff]), 0)).toBe("");
   expect(fitBytes(Buffer.from("value"), -1)).toBe("");
+  expect(fitBytes(Buffer.from([0xff]), 0.5)).toBe("");
+  expect(fitBytes(Buffer.from("value"), Number.NaN)).toBe("");
 });

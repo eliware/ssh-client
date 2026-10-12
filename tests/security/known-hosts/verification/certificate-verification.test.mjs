@@ -81,6 +81,7 @@ test("rejects invalid CA, validity, principal, and signature data", () => {
       10n,
     ],
     [validCertificate("rsa-sha2-256", { base: "ssh-dss" }), ca, ["router"], 10n],
+    [validCertificate("ssh-rsa", { base: "ssh-rsa" }), ca, ["router"], 10n],
     [validCertificate("ecdsa-sha2-nistp256", { base: "ecdsa-sha2-nistp384" }), ca, ["router"], 10n],
     [validCertificate("unknown-algorithm"), ca, ["router"], 10n],
   ];
