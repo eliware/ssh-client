@@ -12,3 +12,16 @@ test("ends clients and destroys when end throws", () => {
   });
   expect(destroy).toHaveBeenCalledTimes(1);
 });
+
+test("does not throw when both end and destroy fail", () => {
+  expect(() =>
+    stopClient({
+      end() {
+        throw Error("end");
+      },
+      destroy() {
+        throw Error("destroy");
+      },
+    }),
+  ).not.toThrow();
+});
