@@ -1,5 +1,24 @@
 import { expect, test } from "@jest/globals";
 import { validateConnectionOptions } from "../../../src/connection/options/validate.mjs";
+import { prepareConnection } from "../../../src/connection/lifecycle/client/options.mjs";
+
+test("rejects missing connection options through the default argument", async () => {
+  await expect(prepareConnection()).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
+});
+
+test("rejects invalid connection ports and timeouts", async () => {
+  const Client = class {};
+  await expect(
+    prepareConnection({ host: "router", port: 0, ClientClass: Client }),
+  ).rejects.toMatchObject({
+    code: "SSH_INVALID_OPTIONS",
+  });
+  await expect(
+    prepareConnection({ host: "router", connectTimeout: 0, ClientClass: Client }),
+  ).rejects.toMatchObject({
+    code: "SSH_INVALID_OPTIONS",
+  });
+});
 
 test("validates host, verifier, port, timeout, and host verification policy", () => {
   const Client = class {};

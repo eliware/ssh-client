@@ -42,6 +42,30 @@ test("returns output from a mocked SSH command", async () => {
   ).resolves.toMatchObject([{ stdout: "ok", code: 0 }]);
 });
 
+test("loads a private key path for an execution", async () => {
+  const fsLib = { readFile: jest.fn().mockResolvedValue("KEY") };
+  class Client {
+    on(event, callback) {
+      if (event === "ready") this.ready = callback;
+      return this;
+    }
+    connect() {
+      this.ready();
+    }
+    end() {}
+  }
+  await expect(
+    sshExec({
+      host: "router",
+      commands: [],
+      privateKeyPath: "/key",
+      fsLib,
+      ClientClass: Client,
+    }),
+  ).resolves.toEqual([]);
+  expect(fsLib.readFile).toHaveBeenCalledWith("/key", "utf8");
+});
+
 test("aborts an active connection", async () => {
   const controller = new AbortController();
   let markStarted;

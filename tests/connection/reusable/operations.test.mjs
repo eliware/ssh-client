@@ -21,6 +21,10 @@ const { createReusableOperations } =
 
 beforeEach(() => {
   jest.clearAllMocks();
+  closeOnTransportFailure.mockImplementation((state, error) => {
+    if (error.code === "SSH_TIMEOUT") state.set("closed");
+    return error;
+  });
   openShell.mockResolvedValue("shell");
   reusableExec.mockResolvedValue("exec");
   reusableUpload.mockResolvedValue("upload");
@@ -72,4 +76,27 @@ test("marks transport failure before it rejects the operation", async () => {
   const state = { isOpen: () => true };
   await expect(createOperations(state).upload({})).rejects.toBe(failure);
   expect(closeOnTransportFailure).toHaveBeenCalledWith(state, failure);
+});
+
+test.each([
+  ["shell", "SSH_TIMEOUT"],
+  ["shell", "SSH_EXEC"],
+  ["download", "SSH_TIMEOUT"],
+  ["download", "SSH_EXEC"],
+])("applies transport failure state to %s with %s", async (name, code) => {
+  const operation = name === "shell" ? openShell : reusableDownload;
+  operation.mockRejectedValueOnce(Object.assign(Error("operation failed"), { code }));
+  const state = {
+    value: "open",
+    isOpen() {
+      return this.value === "open";
+    },
+    set(value) {
+      this.value = value;
+    },
+  };
+  const operations = createOperations(state);
+  const result = name === "shell" ? operations.shell() : operations.download({});
+  await expect(result).rejects.toMatchObject({ code });
+  expect(state.value).toBe(code === "SSH_TIMEOUT" ? "closed" : "open");
 });

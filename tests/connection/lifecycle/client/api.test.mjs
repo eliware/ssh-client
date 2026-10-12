@@ -5,6 +5,7 @@ import { tmpdir, homedir } from "node:os";
 import { pathToFileURL } from "node:url";
 import ssh2 from "@eliware/ssh2";
 import { createHostVerifier } from "../../../../src/public-api.mjs";
+import { connect } from "../../../../src/connection/lifecycle/client/connect.mjs";
 import { createReusableClientApi } from "../../../../src/connection/lifecycle/client/api.mjs";
 
 test("exposes open state and rejects operations after close", async () => {
