@@ -55,6 +55,15 @@ test("uses fallback username and default port", async () => {
     end() {}
   }
   try {
+    const prepared = await prepareConnection({
+      host: "localhost",
+      password: "pw",
+      hostVerifier: () => true,
+      ClientClass: class {},
+      fsLib: mockFs,
+    });
+    expect(prepared.clientConfig.username).toBe("fallback-user");
+    expect(prepared.clientConfig.port).toBe(22);
     await expect(
       sshExec({
         host: "localhost",
