@@ -122,7 +122,7 @@ test("rejects invalid verifier configuration and host records", async () => {
   ).resolves.toBe(false);
 });
 
-test("reads known-host and CA files through the injected file system", async () => {
+test("skips the CA file after a known-host match", async () => {
   const fsLib = {
     readFile: jest.fn(async (path) =>
       path === "known_hosts" ? "router ssh-test trusted" : "ssh-rsa ca-key",
@@ -137,6 +137,22 @@ test("reads known-host and CA files through the injected file system", async () 
   });
   await expect(verifyKnownHost("trusted")).resolves.toBe(true);
   expect(fsLib.readFile).toHaveBeenCalledWith("known_hosts", "utf8");
+  expect(fsLib.readFile).not.toHaveBeenCalledWith("ca_hosts", "utf8");
+});
+
+test("reads the CA file to verify a host certificate", async () => {
+  const ca = {
+    getPublicSSH: () => Buffer.from("ca"),
+    verify: () => true,
+  };
+  const fsLib = { readFile: jest.fn(async () => "ssh-ed25519 authority") };
+  const verify = createHostVerifier({
+    host: "router",
+    hostCaPath: "ca_hosts",
+    fsLib,
+    utils: { parseKey: () => ca },
+  });
+  await expect(verify(certificateKey())).resolves.toBe(true);
   expect(fsLib.readFile).toHaveBeenCalledWith("ca_hosts", "utf8");
 });
 

@@ -35,9 +35,10 @@ export function createHostVerifier({
         if (records.invalid || records.revoked.some((record) => sameKey(record, actual, utils)))
           return false;
         accepted = records.accepted;
-        const fileAuthorities = hostCaPath
-          ? await readAuthorities(hostCaPath, fsLib, homedirFn, utils)
-          : [];
+        const fileAuthorities =
+          !accepted && cert && hostCaPath
+            ? await readAuthorities(hostCaPath, fsLib, homedirFn, utils)
+            : [];
         if (!accepted && cert)
           accepted = [...records.authorities, ...fileAuthorities].some((ca) =>
             verifyCertificate(cert, ca, utils, hosts),
