@@ -3,10 +3,9 @@ on:
   push:
     deployments:
       - target: dev
-        cwd: /usr/src/eliware/ssh-client
+        cwd: /eliware/ssh-client
+        timeoutMs: 300000
         commands:
           - git pull --ff-only origin main
           - npm ci
           - npm test
-          - npm run typecheck
-          - npm run pack

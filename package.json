@@ -43,7 +43,7 @@
     "node": ">=26"
   },
   "dependencies": {
-    "@eliware/ssh2": "1.17.0"
+    "@eliware/ssh2": "^1.17.0"
   },
   "devDependencies": {
     "@eliware/test": "^12.0.0",
