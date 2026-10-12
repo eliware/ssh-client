@@ -24,7 +24,7 @@ export function createHostVerifier({
     typeof utils?.parseKey !== "function"
   )
     return () => false;
-  const hosts = [host, `[${host}]:${port}`];
+  const hosts = port === 22 ? [host] : [`[${host}]:${port}`];
   return (key, callback) => {
     const verification = (async () => {
       let accepted = false;

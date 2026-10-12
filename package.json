@@ -96,7 +96,7 @@
     "url": "https://github.com/eliware/ssh-client/issues"
   },
   "eliware": {
-    "id": "E-280",
+    "id": "E-250",
     "apply": [
       "general",
       "library",

@@ -51,6 +51,38 @@ test("accepts a matching host key and rejects an unknown key", async () => {
   await expect(verify("unknown")).resolves.toBe(false);
 });
 
+test("matches the OpenSSH host form for each port", async () => {
+  const utils = createUtils();
+  const defaultPort = createHostVerifier({
+    host: "router",
+    port: 22,
+    knownHosts: "router ssh-test trusted",
+    utils,
+  });
+  const bracketedDefaultPort = createHostVerifier({
+    host: "router",
+    port: 22,
+    knownHosts: "[router]:22 ssh-test trusted",
+    utils,
+  });
+  const customPort = createHostVerifier({
+    host: "router",
+    port: 2222,
+    knownHosts: "[router]:2222 ssh-test trusted",
+    utils,
+  });
+  const bareCustomPort = createHostVerifier({
+    host: "router",
+    port: 2222,
+    knownHosts: "router ssh-test trusted",
+    utils,
+  });
+  await expect(defaultPort("trusted")).resolves.toBe(true);
+  await expect(bracketedDefaultPort("trusted")).resolves.toBe(false);
+  await expect(customPort("trusted")).resolves.toBe(true);
+  await expect(bareCustomPort("trusted")).resolves.toBe(false);
+});
+
 test("reports invalid host records through the callback", async () => {
   const callback = jest.fn();
   const verify = createHostVerifier({
