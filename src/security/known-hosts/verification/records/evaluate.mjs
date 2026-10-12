@@ -11,7 +11,7 @@ export function evaluateRecords(text, hosts, actual, cert, utils) {
     if (!first || first.startsWith("#")) continue;
     const marked = first.startsWith("@");
     const patternField = marked ? fields[1] : first;
-    if (!patternField) return { invalid: true };
+    if (!patternField) continue;
     const patterns = patternField.split(",");
     if (!matchesList(patterns, hosts)) continue;
     if (fields.length < (marked ? 4 : 3)) return { invalid: true };
