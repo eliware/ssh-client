@@ -8,6 +8,15 @@ test("adapts a custom host verifier", () => {
   expect(callback).toHaveBeenCalledWith(true);
 });
 
+test("adapts a callback-style custom verifier that returns undefined", () => {
+  const verifier = prepareHostVerification({
+    hostVerifier: (_key, callback) => callback(true),
+  });
+  const callback = jest.fn();
+  expect(verifier(Buffer.from("key"), callback)).toBeUndefined();
+  expect(callback).toHaveBeenCalledWith(true);
+});
+
 test("creates a verifier from known-host records", () => {
   const verifier = prepareHostVerification({
     host: "router",
