@@ -23,71 +23,61 @@ An ESM-first Node.js SSH client with secure host verification, reusable connecti
 
 ## Features
 
-- Execute one or more commands through SSH.
-- Reuse an SSH connection for command, shell, and SFTP operations.
+- Run one or more commands through SSH.
+- Reuse a connection for commands, shells, and file transfers.
 - Verify host keys and OpenSSH host certificates.
-- Use private-key or password authentication.
-- Set timeouts and cancellation signals for operations.
-- Use interactive shells with terminal settings.
-- Upload and download files through SFTP.
-- Use typed declarations for the public API.
+- Use a private key, password, or SSH agent.
+- Set time limits and cancellation signals.
+- Use typed public API declarations.
 
 ## Requirements
 
 - Use Node.js 26 or later with native ESM.
-- Use an SSH server and valid host verification data.
-- Use private-key or password authentication.
+- Provide trusted host-key data or a host certificate authority.
+- Provide access through a private key, password, or SSH agent.
 
 ## Setup
 
-Run `npm install @eliware/ssh-client` to install the package. Check the npm registry for the current published version. The package version in this checkout does not confirm publication.
+Install the package with `npm install @eliware/ssh-client`.
+Read the [installation and connection guide](docs/usage.md) before first use.
 
 ## Usage
 
-Import the API from `@eliware/ssh-client`.
-
-```js
-import { sshExec } from "@eliware/ssh-client";
-
-const results = await sshExec({
-  host: "router.example",
-  username: "operator",
-  knownHosts: "router.example ssh-ed25519 BASE64_HOST_KEY",
-  commands: ["show version"],
-});
-
-console.log(results[0].result);
-```
-
-For a reusable connection, call `connect()` and close it after use. Read [RELEASE_NOTES.md](RELEASE_NOTES.md) for release history.
+Import `sshExec` to run commands.
+Read the [user guide](docs/README.md) for shell, transfer, and connection examples.
+Read [RELEASE_NOTES.md](RELEASE_NOTES.md) for release history.
 
 ## Development
 
-Run `npm ci` to install locked dependencies. Read [docs/README.md](docs/README.md), [specs/README.md](specs/README.md), and [examples/README.md](examples/README.md) before you change the library.
+Run `npm ci` to install the locked packages.
+Read [docs/README.md](docs/README.md), [specs/README.md](specs/README.md), and [examples/README.md](examples/README.md) before edits.
 
 ## Testing
 
-Run `npm test` for aggregate validation and coverage. Run `npm run lint`, `npm run format:check`, `npm run audit`, `npm run typecheck`, and `npm run pack` for focused checks. Run `npm run format` to format files.
+Run `npm test` for aggregate validation.
 
 ## Troubleshooting
 
-Check that the host key matches the configured known-hosts record. Check that the key or password has access to the host. Read [the troubleshooting guide](docs/troubleshooting.md) for more help.
+Read the [troubleshooting guide](docs/troubleshooting.md) when an operation fails.
 
 ## Security
 
-Verify every SSH host with known-hosts data or a host certificate authority. Keep private keys and passwords outside the repository. Use only safe placeholders in examples.
+Read the [security guide](docs/security.md) before you set host verification or authentication options.
 
 ## API
 
-The public API exports `connect`, `sshExec`, `createHostVerifier`, `loadKey`, `expandPath`, `upload`, and `download`. The declarations in `src/public-api.d.ts` define the supported input and output types.
+The package exports `connect`, `sshExec`, `createHostVerifier`, `loadKey`, `expandPath`, `upload`, `download`, and `SshError`.
+Read the [API guide](docs/api.md) and declarations in `src/public-api.d.ts`.
 
 ## Packaging
 
-The package includes `src/`, `docs/`, `examples/`, `specs/`, and the required root files. Run `npm run pack` to check the package contents.
+The package includes `src/`, `docs/`, `examples/`, `specs/`, and required root files.
+Run `npm run pack` to check package contents.
 
 ## Examples
 
-Read [examples/README.md](examples/README.md) for the runnable examples. The examples use placeholder host and key data.
+Read [examples/README.md](examples/README.md) for the runnable example.
+Use your own host data and key files.
 
 ## Support
 

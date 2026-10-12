@@ -2,11 +2,10 @@ export type HostVerifier = (
   key: Buffer,
   verify?: (ok: boolean) => void,
 ) => boolean | void | Promise<boolean>;
-export interface SshExecOptions {
+export interface SshConnectionOptions {
   host: string;
   port?: number;
   username?: string;
-  commands: string[];
   privateKey?: string;
   privateKeyPath?: string;
   passphrase?: string;
@@ -17,6 +16,12 @@ export interface SshExecOptions {
   knownHostsPath?: string;
   hostCaPath?: string;
   connectTimeout?: number;
+  ClientClass?: any;
+  fsLib?: any;
+  homedirFn?: () => string;
+}
+export interface SshExecOptions extends SshConnectionOptions {
+  commands: string[];
   commandTimeout?: number;
   timeout?: number;
   signal?: AbortSignal;
@@ -26,9 +31,6 @@ export interface SshExecOptions {
   envFallback?: "posix" | "powershell" | "cmd";
   pty?: boolean;
   keepAlive?: boolean;
-  ClientClass?: any;
-  fsLib?: any;
-  homedirFn?: () => string;
 }
 export interface SshExecResult {
   command: string;
@@ -90,7 +92,7 @@ export class SshError extends Error {
   context: { operation: string; phase: string; [key: string]: unknown };
 }
 export declare function sshExec(options: SshExecOptions): Promise<SshExecResult[]>;
-export declare function connect(options: Omit<SshExecOptions, "commands">): Promise<SshConnection>;
+export declare function connect(options: SshConnectionOptions): Promise<SshConnection>;
 export declare function createHostVerifier(options: {
   host: string;
   port?: number;
@@ -106,5 +108,5 @@ export declare function loadKey(options?: {
   homedirFn?: () => string;
 }): Promise<string | undefined>;
 export declare function expandPath(value: string, homedirFn?: () => string): string;
-export declare function upload(options: UploadOptions & { ClientClass?: any }): Promise<void>;
-export declare function download(options: DownloadOptions & { ClientClass?: any }): Promise<void>;
+export declare function upload(options: SshConnectionOptions & UploadOptions): Promise<void>;
+export declare function download(options: SshConnectionOptions & DownloadOptions): Promise<void>;

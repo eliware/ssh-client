@@ -2,36 +2,62 @@
 
 ## Project
 
-Maintain `@eliware/ssh-client`, a Node.js 26 or later library with native ESM.
+Maintain `@eliware/ssh-client` as a Node.js 26 or later library with native ESM.
 
 ## Scope and boundaries
 
-This repository owns the SSH client API, implementation, tests, and documentation. It does not own consumer repositories or deployment systems. Shared requirements live in Eliware Test. Release steps live in Eliware Operations.
+Keep the SSH API, source, tests, and docs in this repository.
+Keep shared requirements in Eliware Test.
+Keep release steps in Eliware Operations.
 
 ## Layout
 
-Keep implementation modules under `src/`. Mirror each `.mjs` module with one test under `tests/`. Keep documentation under `docs/`, specifications under `specs/`, and examples under `examples/`.
+Keep runtime source under `src/`.
+Keep tests under `tests/` and mirror every `.mjs` source file.
+Keep docs under `docs/`, specifications under `specs/`, and examples under `examples/`.
+Keep source files to 100 lines or less.
+Keep test files to 200 lines or less.
 
 ## Development
 
-Read this file, `README.md`, and relevant docs, specs, source, and tests before edits. Give each source and test module one purpose. Coordinators may sequence work and call focused helpers. Move separate policies and operations into focused modules with mirrored tests. Keep each source file at or below 100 lines and each test file at or below 200 lines.
+Read the README, related docs, specifications, source, and tests before edits.
+Give each source and test module one purpose.
+Keep the public API, declarations, and examples in sync.
 
 ## Validation
 
-Use Node.js 26 or later and npm 12 or later. Run `npm test` for aggregate validation. Run `npm run lint`, `npm run format:check`, `npm run audit`, `npm run typecheck`, or `npm run pack` as needed. Use `npm run format` only when you want to change formatting. Run `git diff --check` before handoff.
+Run `npm test` for aggregate validation.
+Run `npm run lint` when you need lint checks.
+Run `npm run format:check` when you need format checks.
+Run `npm run audit` when you need audit checks.
+Run `npm run format` only when you want to change formatting.
+Run `git diff --check` before handoff.
 
 ## Security
 
-Protect credentials, tokens, private keys, and machine-specific values. Never commit secret values. Verify hosts with approved known-host data. Keep private keys out of source, tests, examples, and package contents.
+Keep credentials, tokens, private keys, and machine-specific values out of source.
+Never commit secret values.
+Verify hosts with approved known-host data.
+Keep private keys out of source, tests, examples, and package contents.
 
 ## Changes
 
-Preserve API behavior and security checks. Update tests, declarations, docs, specs, and release notes when they apply. Publish only after approval through the Eliware Operations release handoff.
+Preserve API behavior and security checks.
+Update docs, declarations, examples, and release notes when they apply.
+Publish only after approval through the Eliware Operations release handoff.
 
 ## Library
 
-The public runtime entrypoint is `src/public-api.mjs`. Its declarations are in `src/public-api.d.ts`. Keep the public API, declarations, and examples aligned. Run `npm run typecheck` and `npm run pack` before release consideration.
+Use `src/public-api.mjs` as the public runtime entrypoint.
+Keep public declarations in `src/public-api.d.ts`.
+Run `npm run typecheck` and `npm run pack` before release review.
 
 ## npm publication
 
-The public package is `@eliware/ssh-client`. `package.json.version` sets its version. Keep `src/`, `docs/`, `README.md`, `AGENTS.md`, `LICENSE`, `RELEASE_NOTES.md`, `examples/`, and `specs/` in `package.json.files`. Run `npm run pack` to check package contents. Pack validation must pass before publication. Use npm provenance. Verify the exact version at `registry.npmjs.org`. Eli and the developer run TagIt preflight together. Eli decides release readiness and instructs DevOps. DevOps performs the release. Use the Eliware Operations handoff for publication approval.
+Keep `src/`, `docs/`, `README.md`, `AGENTS.md`, `LICENSE`, `RELEASE_NOTES.md`, `examples/`, and `specs/` in `package.json.files`.
+Use npm provenance.
+Check the exact package version at `registry.npmjs.org` before release review.
+Run TagIt preflight with Eli and the developer.
+Let Eli decide release readiness and instruct DevOps.
+Let DevOps publish the package.
+Use the Eliware Operations handoff for publication approval.
