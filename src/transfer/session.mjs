@@ -42,13 +42,11 @@ export function runTransfer(client, config, operation, start) {
         reject,
       });
     const cancel = () => {
-      closeSftp(sftp);
       finish(cancellationError(operation));
     };
     attachTransferCancellation(signal, cancel);
     if (signal?.aborted) return;
     timer = startTransferTimeout(timeout, () => {
-      closeSftp(sftp);
       finish(timeoutError(operation));
     });
     acquireSftp(client, (error, handle) => {

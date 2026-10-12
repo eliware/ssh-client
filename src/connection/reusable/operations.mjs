@@ -23,7 +23,15 @@ export function createReusableOperations({ client, options, state, serialize }) 
       admit("exec", () => reusableExec(client, options, commands, callOptions), true),
     shell: (shellOptions) =>
       admit("shell", () =>
-        openShell(client, shellOptions && typeof shellOptions === "object" ? shellOptions : {}),
+        openShell(
+          client,
+          shellOptions && typeof shellOptions === "object" ? shellOptions : {},
+        ).then((session) => {
+          session.completion?.catch((error) => {
+            closeOnTransportFailure(state, error);
+          });
+          return session;
+        }),
       ),
     upload: (transferOptions) =>
       admit("upload", () => reusableUpload(client, transferOptions), true),

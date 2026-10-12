@@ -55,6 +55,37 @@ test("cancels immediately when the signal is already aborted", async () => {
   expect(sftp).not.toHaveBeenCalled();
 });
 
+test("closes an active SFTP handle once after cancellation", async () => {
+  const controller = new AbortController();
+  const handle = { end: jest.fn() };
+  const pending = runTransfer(
+    { sftp: (callback) => callback(null, handle) },
+    { signal: controller.signal },
+    "upload",
+    () => {},
+  );
+  const rejected = expect(pending).rejects.toMatchObject({ code: "SSH_CANCELLED" });
+  controller.abort();
+  await rejected;
+  expect(handle.end).toHaveBeenCalledTimes(1);
+});
+
+test("closes an active SFTP handle once after timeout", async () => {
+  jest.useFakeTimers();
+  const handle = { end: jest.fn() };
+  const pending = runTransfer(
+    { sftp: (callback) => callback(null, handle) },
+    { timeout: 5 },
+    "upload",
+    () => {},
+  );
+  const rejected = expect(pending).rejects.toMatchObject({ code: "SSH_TIMEOUT" });
+  await jest.advanceTimersByTimeAsync(5);
+  await rejected;
+  expect(handle.end).toHaveBeenCalledTimes(1);
+  jest.useRealTimers();
+});
+
 test("times out while SFTP setup is pending", async () => {
   jest.useFakeTimers();
   const pending = runTransfer({ sftp() {} }, { timeout: 5 }, "upload", () => {});

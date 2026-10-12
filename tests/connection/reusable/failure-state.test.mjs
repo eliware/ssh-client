@@ -12,6 +12,12 @@ test("closes state for transport failure codes", () => {
   expect(state.value).toBe("closed");
 });
 
+test("closes state after a shell stream failure", () => {
+  const state = { set: (value) => (state.value = value) };
+  closeOnTransportFailure(state, { code: "SSH_SHELL" });
+  expect(state.value).toBe("closed");
+});
+
 test("preserves state for unrelated errors", () => {
   const state = {
     set: () => {

@@ -22,7 +22,7 @@ const { createReusableOperations } =
 beforeEach(() => {
   jest.clearAllMocks();
   closeOnTransportFailure.mockImplementation((state, error) => {
-    if (error.code === "SSH_TIMEOUT") state.set("closed");
+    if (["SSH_TIMEOUT", "SSH_SHELL"].includes(error.code)) state.set("closed");
     return error;
   });
   openShell.mockResolvedValue("shell");
@@ -116,5 +116,29 @@ test("closes state when shell setup throws synchronously", async () => {
     },
   };
   await expect(createOperations(state).shell()).rejects.toBe(failure);
+  expect(state.value).toBe("closed");
+});
+
+test("closes state when an open shell reports a stream failure", async () => {
+  let rejectCompletion;
+  const completion = new Promise((_, reject) => {
+    rejectCompletion = reject;
+  });
+  openShell.mockResolvedValueOnce({ completion });
+  const state = {
+    value: "open",
+    isOpen() {
+      return this.value === "open";
+    },
+    set(value) {
+      this.value = value;
+    },
+  };
+  const session = await createOperations(state).shell();
+  const failure = Object.assign(Error("shell stream failed"), { code: "SSH_SHELL" });
+  const rejected = expect(session.completion).rejects.toBe(failure);
+  rejectCompletion(failure);
+  await rejected;
+  await Promise.resolve();
   expect(state.value).toBe("closed");
 });

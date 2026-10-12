@@ -3,6 +3,7 @@ const CLOSED_ERRORS = new Set([
   "SSH_TIMEOUT",
   "SSH_CANCELLED",
   "SSH_CONNECTION",
+  "SSH_SHELL",
 ]);
 
 export function closeOnTransportFailure(state, error) {
