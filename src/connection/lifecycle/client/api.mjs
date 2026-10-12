@@ -9,6 +9,7 @@ export function createReusableClientApi(client, options) {
   const markClosed = () => state.set("closed");
   client.once?.("end", markClosed);
   client.once?.("close", markClosed);
+  client.once?.("error", markClosed);
   const close = () => {
     if (closePromise) return closePromise;
     closePromise = closeConnection(client, (value) => state.set(value));

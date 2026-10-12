@@ -51,6 +51,15 @@ test("accepts a matching host key and rejects an unknown key", async () => {
   await expect(verify("unknown")).resolves.toBe(false);
 });
 
+test("accepts a trusted key when another key record follows it", async () => {
+  const verify = createHostVerifier({
+    host: "router",
+    knownHosts: "router ssh-test trusted\nrouter ssh-test other",
+    utils: createUtils(),
+  });
+  await expect(verify("trusted")).resolves.toBe(true);
+});
+
 test("rejects a key with both trusted and revoked records", async () => {
   const verify = createHostVerifier({
     host: "router",
