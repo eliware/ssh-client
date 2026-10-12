@@ -13,11 +13,12 @@ export function evaluateRecords(text, hosts, actual, cert, utils) {
     const patternField = marked ? fields[1] : first;
     if (!patternField) continue;
     const patterns = patternField.split(",");
-    if (!matchesList(patterns, hosts)) continue;
-    if (fields.length < (marked ? 4 : 3)) return { invalid: true };
     const marker = marked ? first : "";
-    if (marked && !["@revoked", "@cert-authority"].includes(marker)) return { invalid: true };
-    const record = `${marked ? fields[2] : fields[1]} ${marked ? fields[3] : fields[2]}`;
+    if (marked) {
+      if (fields.length < 4) return { invalid: true };
+      if (!["@revoked", "@cert-authority"].includes(marker)) return { invalid: true };
+    }
+    const record = marked ? `${fields[2]} ${fields[3]}` : "";
     if (marked) {
       try {
         if (!utils.parseKey(record)?.getPublicSSH?.()) return { invalid: true };
@@ -25,15 +26,18 @@ export function evaluateRecords(text, hosts, actual, cert, utils) {
         return { invalid: true };
       }
     }
+    if (!matchesList(patterns, hosts)) continue;
+    if (fields.length < 3) return { invalid: true };
+    const keyRecord = marked ? record : `${fields[1]} ${fields[2]}`;
     if (marker === "@revoked") {
-      revoked.push(record);
+      revoked.push(keyRecord);
       continue;
     }
     if (marker === "@cert-authority") {
-      authorities.push(record);
+      authorities.push(keyRecord);
       continue;
     }
-    if (sameKey(record, actual, utils)) accepted = !cert;
+    if (sameKey(keyRecord, actual, utils)) accepted = !cert;
   }
   return { accepted, authorities, revoked, invalid: false };
 }

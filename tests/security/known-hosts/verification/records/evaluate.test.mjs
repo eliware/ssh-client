@@ -105,3 +105,19 @@ test("rejects a malformed record for a matching host", () => {
     invalid: true,
   });
 });
+
+test("rejects a malformed marked record for an unrelated host", () => {
+  const utils = { parseKey: () => null };
+  expect(
+    evaluateRecords(
+      "@cert-authority unrelated.example ssh-ed25519 key",
+      ["router"],
+      {},
+      null,
+      utils,
+    ),
+  ).toMatchObject({ invalid: true });
+  expect(
+    evaluateRecords("@revoked unrelated.example ssh-ed25519", ["router"], {}, null, utils),
+  ).toMatchObject({ invalid: true });
+});

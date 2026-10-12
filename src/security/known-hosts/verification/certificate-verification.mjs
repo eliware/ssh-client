@@ -27,6 +27,7 @@ export function verifyCertificate(
     "ecdsa-sha2-nistp384": "sha384",
     "ecdsa-sha2-nistp521": "sha512",
   };
+  if (name.startsWith("ecdsa-sha2-") && !Object.hasOwn(ecdsaHash, name)) return false;
   if (name.startsWith("rsa-sha2-") && cert.base !== "ssh-rsa") return false;
   if (name.startsWith("ecdsa-sha2-") && !name.endsWith(cert.base.slice("ecdsa-sha2-".length)))
     return false;

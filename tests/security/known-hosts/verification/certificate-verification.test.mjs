@@ -118,6 +118,15 @@ test("verifies Ed25519, RSA, and ECDSA signatures", () => {
   }
 });
 
+test("rejects an unsupported ECDSA algorithm before CA verification", () => {
+  const ca = createCa();
+  const cert = validCertificate("ecdsa-sha2-custom-nistp256", {
+    base: "ecdsa-sha2-nistp256",
+  });
+  expect(verifyCertificate(cert, "ca", { parseKey: () => ca }, ["router"], 10n)).toBe(false);
+  expect(ca.verify).not.toHaveBeenCalled();
+});
+
 test("accepts an unlimited certificate end time and default clock", () => {
   const cert = validCertificate("ssh-ed25519", { before: 0xffffffffffffffffn });
   expect(verifyCertificate(cert, "ca", { parseKey: () => createCa() }, ["router"])).toBe(true);
