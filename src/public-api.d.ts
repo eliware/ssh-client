@@ -106,7 +106,7 @@ export declare function loadKey(options?: {
   passphrase?: string;
   fsLib?: any;
   homedirFn?: () => string;
-}): Promise<string | undefined>;
+}): Promise<string>;
 export declare function expandPath(value: string, homedirFn?: () => string): string;
 export declare function upload(options: SshConnectionOptions & UploadOptions): Promise<void>;
 export declare function download(options: SshConnectionOptions & DownloadOptions): Promise<void>;

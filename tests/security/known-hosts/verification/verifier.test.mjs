@@ -142,6 +142,7 @@ test("skips the CA file after a known-host match", async () => {
 
 test("reads the CA file to verify a host certificate", async () => {
   const ca = {
+    type: "ssh-ed25519",
     getPublicSSH: () => Buffer.from("ca"),
     verify: () => true,
   };
@@ -158,13 +159,14 @@ test("reads the CA file to verify a host certificate", async () => {
 
 test("accepts a certificate signed by a matching host authority", async () => {
   const ca = {
+    type: "ssh-ed25519",
     getPublicSSH: () => Buffer.from("ca"),
     verify: () => true,
   };
   const utils = { parseKey: () => ca };
   const verify = createHostVerifier({
     host: "router",
-    knownHosts: "@cert-authority router ssh-rsa ca-key",
+    knownHosts: "@cert-authority router ssh-ed25519 ca-key",
     utils,
   });
   await expect(verify(certificateKey())).resolves.toBe(true);

@@ -41,6 +41,11 @@ test("rejects malformed record markers and fields", () => {
   expect(evaluateRecords("router key", ["router"], {}, null, utils)).toMatchObject({
     invalid: true,
   });
+  expect(evaluateRecords("@revoked router ssh-ed25519", ["router"], {}, null, utils)).toMatchObject(
+    {
+      invalid: true,
+    },
+  );
   expect(
     evaluateRecords("@revoked router ssh-ed25519 key", ["router"], {}, null, {
       parseKey: () => null,
@@ -106,18 +111,18 @@ test("rejects a malformed record for a matching host", () => {
   });
 });
 
-test("rejects a malformed marked record for an unrelated host", () => {
-  const utils = { parseKey: () => null };
+test("ignores malformed marked records for unrelated hosts", () => {
+  const publicKey = { equals: (other) => other === publicKey };
+  const utils = {
+    parseKey: (record) => (record === "ssh-ed25519 key" ? { getPublicSSH: () => publicKey } : null),
+  };
   expect(
     evaluateRecords(
-      "@cert-authority unrelated.example ssh-ed25519 key",
+      "@unknown unrelated.example malformed\n@cert-authority unrelated.example ssh-ed25519 key\nrouter ssh-ed25519 key",
       ["router"],
-      {},
+      { getPublicSSH: () => publicKey },
       null,
       utils,
     ),
-  ).toMatchObject({ invalid: true });
-  expect(
-    evaluateRecords("@revoked unrelated.example ssh-ed25519", ["router"], {}, null, utils),
-  ).toMatchObject({ invalid: true });
+  ).toMatchObject({ accepted: true, invalid: false });
 });

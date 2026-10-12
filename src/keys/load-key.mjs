@@ -1,8 +1,15 @@
 import { SshError } from "../errors.mjs";
+import { promises as fs } from "node:fs";
+import { homedir } from "node:os";
 import { readKeyFile } from "./read-key-file.mjs";
 import { selectKeySources } from "./select-key-source.mjs";
 
-export async function loadKey({ privateKey, privateKeyPath, fsLib, homedirFn }) {
+export async function loadKey({
+  privateKey,
+  privateKeyPath,
+  fsLib = fs,
+  homedirFn = homedir,
+} = {}) {
   if (privateKey) return privateKey;
   const key = await readKeyFile(selectKeySources({ privateKeyPath, homedirFn }), fsLib);
   if (key !== undefined) return key;

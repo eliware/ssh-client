@@ -1,4 +1,5 @@
 import { expect, test, jest } from "@jest/globals";
+import { promises as fs } from "node:fs";
 import { loadKey } from "../../src/keys/load-key.mjs";
 
 test("returns inline keys without reading files", async () => {
@@ -24,4 +25,14 @@ test("loads explicit and fallback keys and reports missing keys", async () => {
       homedirFn: () => "/home",
     }),
   ).rejects.toMatchObject({ code: "SSH_KEY_NOT_FOUND" });
+});
+
+test("uses the system file and home defaults when options are omitted", async () => {
+  const readFile = jest.spyOn(fs, "readFile").mockRejectedValue(Error("missing"));
+  try {
+    await expect(loadKey()).rejects.toMatchObject({ code: "SSH_KEY_NOT_FOUND" });
+    expect(readFile).toHaveBeenCalled();
+  } finally {
+    readFile.mockRestore();
+  }
 });

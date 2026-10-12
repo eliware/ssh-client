@@ -13,6 +13,7 @@ export function evaluateRecords(text, hosts, actual, cert, utils) {
     const patternField = marked ? fields[1] : first;
     if (!patternField) continue;
     const patterns = patternField.split(",");
+    if (!matchesList(patterns, hosts)) continue;
     const marker = marked ? first : "";
     if (marked) {
       if (fields.length < 4) return { invalid: true };
@@ -26,7 +27,6 @@ export function evaluateRecords(text, hosts, actual, cert, utils) {
         return { invalid: true };
       }
     }
-    if (!matchesList(patterns, hosts)) continue;
     if (fields.length < 3) return { invalid: true };
     const keyRecord = marked ? record : `${fields[1]} ${fields[2]}`;
     if (marker === "@revoked") {

@@ -27,17 +27,14 @@ export function verifyCertificate(
     "ecdsa-sha2-nistp384": "sha384",
     "ecdsa-sha2-nistp521": "sha512",
   };
-  if (name.startsWith("ecdsa-sha2-") && !Object.hasOwn(ecdsaHash, name)) return false;
-  if (name.startsWith("rsa-sha2-") && cert.base !== "ssh-rsa") return false;
-  if (name.startsWith("ecdsa-sha2-") && !name.endsWith(cert.base.slice("ecdsa-sha2-".length)))
-    return false;
-  const hash = name.startsWith("ecdsa-sha2-")
-    ? ecdsaHash[name]
-    : name === "rsa-sha2-256"
-      ? "sha256"
-      : name === "rsa-sha2-512"
-        ? "sha512"
-        : undefined;
-  if (name !== "ssh-ed25519" && !hash) return false;
+  if (name === "ssh-ed25519")
+    return ca.type === name && ca.verify(cert.signed, signature.value) === true;
+  if (name === "rsa-sha2-256" || name === "rsa-sha2-512") {
+    if (ca.type !== "ssh-rsa") return false;
+    const hash = name === "rsa-sha2-256" ? "sha256" : "sha512";
+    return ca.verify(cert.signed, signature.value, hash) === true;
+  }
+  if (!Object.hasOwn(ecdsaHash, name) || ca.type !== name) return false;
+  const hash = ecdsaHash[name];
   return ca.verify(cert.signed, signature.value, hash) === true;
 }

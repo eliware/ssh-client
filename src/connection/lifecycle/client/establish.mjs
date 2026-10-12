@@ -11,6 +11,8 @@ export function establishClient(ClientClass, config, timeout) {
   return new Promise((resolve, reject) => {
     let client;
     let settled = false;
+    let connecting = false;
+    let readyReceived = false;
     let timer;
     let ready;
     let error;
@@ -41,18 +43,32 @@ export function establishClient(ClientClass, config, timeout) {
       stopClient(client);
       return finish(cause);
     }
-    ready = () => finish();
-    error = (cause) =>
-      finish(new SshError(`SSH connection error: ${errorMessage(cause)}`, "SSH_CONNECTION", cause));
-    end = () => finish(new SshError("SSH connection ended before ready", "SSH_CONNECTION"));
-    close = () => finish(new SshError("SSH connection closed before ready", "SSH_CONNECTION"));
+    ready = () => {
+      readyReceived = true;
+      if (!connecting) finish();
+    };
+    error = (cause) => {
+      if (!readyReceived)
+        finish(
+          new SshError(`SSH connection error: ${errorMessage(cause)}`, "SSH_CONNECTION", cause),
+        );
+    };
+    end = () => {
+      if (!readyReceived)
+        finish(new SshError("SSH connection ended before ready", "SSH_CONNECTION"));
+    };
+    close = () => {
+      if (!readyReceived)
+        finish(new SshError("SSH connection closed before ready", "SSH_CONNECTION"));
+    };
     attachConnectionLifecycle(client, {
       onReady: ready,
       onError: error,
       onEnd: end,
       onClose: close,
     });
-    if (settled) {
+    if (settled || readyReceived) {
+      finish();
       detachConnectionLifecycle(client, {
         onReady: ready,
         onError: error,
@@ -66,8 +82,12 @@ export function establishClient(ClientClass, config, timeout) {
       stopClient(client);
     });
     try {
+      connecting = true;
       client.connect(config);
+      connecting = false;
+      if (readyReceived) finish();
     } catch (cause) {
+      connecting = false;
       finish(new SshError(`SSH connection error: ${errorMessage(cause)}`, "SSH_CONNECTION", cause));
     }
   });

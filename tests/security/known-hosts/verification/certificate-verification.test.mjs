@@ -22,8 +22,9 @@ function validCertificate(algorithm = "ssh-ed25519", changes = {}) {
   };
 }
 
-function createCa(result = true) {
+function createCa(result = true, type = "ssh-ed25519") {
   return {
+    type,
     getPublicSSH: () => Buffer.from("ca"),
     verify: jest.fn(() => result),
   };
@@ -103,18 +104,22 @@ test("rejects invalid CA, validity, principal, and signature data", () => {
 
 test("verifies Ed25519, RSA, and ECDSA signatures", () => {
   const cases = [
-    ["ssh-ed25519", "ssh-ed25519", undefined],
-    ["rsa-sha2-256", "ssh-rsa", "sha256"],
-    ["rsa-sha2-512", "ssh-rsa", "sha512"],
-    ["ecdsa-sha2-nistp256", "ecdsa-sha2-nistp256", "sha256"],
-    ["ecdsa-sha2-nistp384", "ecdsa-sha2-nistp384", "sha384"],
-    ["ecdsa-sha2-nistp521", "ecdsa-sha2-nistp521", "sha512"],
+    ["ssh-ed25519", "ssh-ed25519", undefined, "ssh-ed25519"],
+    ["rsa-sha2-256", "ssh-rsa", "sha256", "ssh-rsa"],
+    ["rsa-sha2-512", "ssh-rsa", "sha512", "ssh-rsa"],
+    ["ecdsa-sha2-nistp256", "ecdsa-sha2-nistp256", "sha256", "ecdsa-sha2-nistp256"],
+    ["ecdsa-sha2-nistp384", "ecdsa-sha2-nistp384", "sha384", "ecdsa-sha2-nistp384"],
+    ["ecdsa-sha2-nistp521", "ecdsa-sha2-nistp521", "sha512", "ecdsa-sha2-nistp521"],
+    ["ecdsa-sha2-nistp256", "ssh-ed25519", "sha256", "ecdsa-sha2-nistp256"],
+    ["rsa-sha2-256", "ssh-ed25519", "sha256", "ssh-rsa"],
+    ["ssh-ed25519", "ssh-rsa", undefined, "ssh-ed25519"],
   ];
-  for (const [algorithm, base, hash] of cases) {
-    const ca = createCa();
+  for (const [algorithm, base, hash, caType] of cases) {
+    const ca = createCa(true, caType);
     const cert = validCertificate(algorithm, { base });
     expect(verifyCertificate(cert, "ca", { parseKey: () => ca }, ["router"], 10n)).toBe(true);
-    expect(ca.verify).toHaveBeenCalledWith(cert.signed, expect.any(Buffer), hash);
+    if (hash) expect(ca.verify).toHaveBeenCalledWith(cert.signed, expect.any(Buffer), hash);
+    else expect(ca.verify).toHaveBeenCalledWith(cert.signed, expect.any(Buffer));
   }
 });
 
@@ -122,6 +127,15 @@ test("rejects an unsupported ECDSA algorithm before CA verification", () => {
   const ca = createCa();
   const cert = validCertificate("ecdsa-sha2-custom-nistp256", {
     base: "ecdsa-sha2-nistp256",
+  });
+  expect(verifyCertificate(cert, "ca", { parseKey: () => ca }, ["router"], 10n)).toBe(false);
+  expect(ca.verify).not.toHaveBeenCalled();
+});
+
+test("rejects a certificate signature from an incompatible CA type", () => {
+  const ca = createCa(true, "ssh-ed25519");
+  const cert = validCertificate("ecdsa-sha2-nistp256", {
+    base: "ssh-ed25519",
   });
   expect(verifyCertificate(cert, "ca", { parseKey: () => ca }, ["router"], 10n)).toBe(false);
   expect(ca.verify).not.toHaveBeenCalled();

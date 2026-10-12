@@ -103,6 +103,31 @@ test("resolves when the transport becomes ready", async () => {
   expect(client).toBeInstanceOf(ReadyClient);
 });
 
+test("rejects when connect throws after a synchronous ready event", async () => {
+  class ReadyThenThrowClient extends EventClient {
+    connect() {
+      this.handlers.get("ready")();
+      throw Error("connect failed");
+    }
+  }
+  await expect(establishClient(ReadyThenThrowClient, {}, 100)).rejects.toMatchObject({
+    code: "SSH_CONNECTION",
+    message: "SSH connection error: connect failed",
+  });
+});
+
+test.each(["end", "close"])("ignores a synchronous %s event after ready", async (event) => {
+  class ReadyThenEndClient extends EventClient {
+    connect() {
+      this.handlers.get("ready")();
+      this.handlers.get(event)();
+    }
+  }
+  await expect(establishClient(ReadyThenEndClient, {}, 100)).resolves.toBeInstanceOf(
+    ReadyThenEndClient,
+  );
+});
+
 test("does not start a timeout when ready fires during listener setup", async () => {
   jest.useFakeTimers();
   try {
