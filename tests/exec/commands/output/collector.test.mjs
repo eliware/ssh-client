@@ -1,4 +1,5 @@
 import { expect, jest, test } from "@jest/globals";
+import { EventEmitter } from "node:events";
 import { createOutputCollector } from "../../../../src/exec/commands/output/collector.mjs";
 import { sshExec } from "../../../../src/exec/runner/pipeline/execute.mjs";
 
@@ -53,6 +54,35 @@ test("caps pipeline output at maxOutput", async () => {
     ClientClass: ClientMock,
   });
   expect(result.result.length).toBeLessThanOrEqual(4);
+});
+
+test("returns a partial result when the output limit closes a silent channel", async () => {
+  class ClientMock {
+    on(event, callback) {
+      if (event === "ready") this.ready = callback;
+      return this;
+    }
+    connect() {
+      this.ready();
+      return this;
+    }
+    exec(_command, callback) {
+      const stream = new EventEmitter();
+      stream.stderr = new EventEmitter();
+      stream.close = jest.fn();
+      callback(null, stream);
+      stream.emit("data", "12345");
+    }
+    end() {}
+  }
+  const [result] = await sshExec({
+    host: "x",
+    commands: ["out"],
+    privateKey: "KEY",
+    maxOutput: 4,
+    ClientClass: ClientMock,
+  });
+  expect(result).toMatchObject({ stdout: "1234", truncated: true, code: null });
 });
 test("covers channel output limits and stderr failures", async () => {
   let streamHandlers;

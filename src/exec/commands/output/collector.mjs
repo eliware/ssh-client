@@ -3,8 +3,17 @@ import { appendOutput } from "./append.mjs";
 
 export function createOutputCollector(maxOutput, getChannel) {
   const state = createOutputState();
+  let onLimit;
   return {
-    add: (target, data) => appendOutput(state, target, data, maxOutput, getChannel),
+    add(target, data) {
+      const truncated = state.truncated;
+      appendOutput(state, target, data, maxOutput, getChannel);
+      if (!truncated && state.truncated) onLimit?.();
+    },
+    onLimit(handler) {
+      onLimit = handler;
+      if (state.truncated) handler();
+    },
     get stdout() {
       return state.stdout;
     },

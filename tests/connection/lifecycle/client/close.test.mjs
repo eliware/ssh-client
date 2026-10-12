@@ -1,6 +1,7 @@
-import { expect, test } from "@jest/globals";
+import { expect, jest, test } from "@jest/globals";
 import { connect } from "../../../../src/connection/lifecycle/client/connect.mjs";
 import { closeConnection } from "../../../../src/connection/lifecycle/client/close.mjs";
+import { createReusableClientApi } from "../../../../src/connection/lifecycle/client/api.mjs";
 
 test("closeConnection closes its client and updates state", async () => {
   const events = new Map();
@@ -108,4 +109,21 @@ test("settles close when the transport emits end only", async () => {
     ClientClass: EndingClient,
   });
   await expect(client.close()).resolves.toBeUndefined();
+});
+
+test("keeps a failed close result stable when close runs again", async () => {
+  const listeners = new Map();
+  const client = {
+    once: (event, callback) => listeners.set(event, callback),
+    removeListener: jest.fn(),
+    end: jest.fn(() => listeners.get("error")(Error("shutdown"))),
+  };
+  const api = createReusableClientApi(client, { host: "router", privateKey: "KEY" });
+  const first = api.close();
+  const firstError = await first.catch((error) => error);
+  expect(firstError).toMatchObject({ code: "SSH_CONNECTION" });
+  expect(api.state).toBe("closed");
+  await expect(api.close()).rejects.toBe(firstError);
+  expect(api.state).toBe("closed");
+  expect(client.end).toHaveBeenCalledTimes(1);
 });

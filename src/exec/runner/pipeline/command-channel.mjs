@@ -17,26 +17,29 @@ export function attachCommandChannel({
   markCompleted,
   next,
 }) {
+  const onClose = (closeCode, closeSignal) =>
+    handleCommandClose({
+      context,
+      output,
+      command,
+      started,
+      getState: () => state,
+      closeCode,
+      closeSignal,
+      commandTimer,
+      isCompleted,
+      markCompleted,
+      next,
+    });
   const state = attachChannel(stream, {
     output,
-    onClose: (closeCode, closeSignal) =>
-      handleCommandClose({
-        context,
-        output,
-        command,
-        started,
-        getState: () => state,
-        closeCode,
-        closeSignal,
-        commandTimer,
-        isCompleted,
-        markCompleted,
-        next,
-      }),
+    onClose,
     onError: (error) => handleCommandError(context, error, isCompleted, markCompleted),
     onStderrError: (error) =>
       handleStderrError(context, error, commandTimer, isCompleted, markCompleted),
   });
+  output.onLimit?.(() => onClose(state.exitCode, state.exitSignal));
+  if (stream.destroyed || stream.closed) onClose(state.exitCode, state.exitSignal);
   return state;
 }
 

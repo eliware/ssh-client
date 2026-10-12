@@ -9,9 +9,6 @@ export function createReusableClientApi(client, options) {
   const close = () => {
     if (closePromise) return closePromise;
     closePromise = closeConnection(client, (value) => state.set(value));
-    closePromise.catch(() => {
-      closePromise = undefined;
-    });
     return closePromise;
   };
   const operations = createReusableOperations({
