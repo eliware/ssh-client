@@ -49,6 +49,15 @@ export function establishClient(ClientClass, config, timeout) {
       onEnd: end,
       onClose: close,
     });
+    if (settled) {
+      detachConnectionLifecycle(client, {
+        onReady: ready,
+        onError: error,
+        onEnd: end,
+        onClose: close,
+      });
+      return;
+    }
     timer = startConnectionLifecycleTimeout(timeout, () => {
       finish(new SshError("SSH connection timed out", "SSH_TIMEOUT"));
       stopClient(client);

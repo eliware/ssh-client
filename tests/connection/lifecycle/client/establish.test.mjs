@@ -12,7 +12,9 @@ class EventClient {
     this.handlers.set(event, callback);
     return this;
   }
-  removeListener() {}
+  removeListener(event) {
+    this.handlers.delete(event);
+  }
   connect() {
     this.handlers.get(this.event)?.();
   }
@@ -85,6 +87,28 @@ test("resolves when the transport becomes ready", async () => {
   }
   const client = await establishClient(ReadyClient, {}, 100);
   expect(client).toBeInstanceOf(ReadyClient);
+});
+
+test("does not start a timeout when ready fires during listener setup", async () => {
+  jest.useFakeTimers();
+  try {
+    class ReadyDuringSetupClient extends EventClient {
+      end = jest.fn();
+      connect = jest.fn();
+      once(event, callback) {
+        if (event === "ready") callback();
+        else super.once(event, callback);
+        return this;
+      }
+    }
+    const client = await establishClient(ReadyDuringSetupClient, {}, 100);
+    jest.advanceTimersByTime(100);
+    expect(client.connect).not.toHaveBeenCalled();
+    expect(client.end).not.toHaveBeenCalled();
+    expect(client.handlers.size).toBe(0);
+  } finally {
+    jest.useRealTimers();
+  }
 });
 
 test.each(["error", "close"])("rejects when the transport emits %s before ready", async (event) => {

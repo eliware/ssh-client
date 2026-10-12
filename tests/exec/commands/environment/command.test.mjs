@@ -14,6 +14,9 @@ test("builds commands with environment fallbacks and safe quoting", () => {
     }),
   ).toBe("$env:KNIT_TEST='yes'; Set-Location 'C:\\temp\\dir'; run");
   expect(buildCommand("run", { cwd: "/tmp" })).toBe("cd '/tmp' && run");
+  expect(buildCommand("run", { cwd: "C:\\Program Files", envFallback: "cmd" })).toContain(
+    'cd /d "C:\\Program Files"',
+  );
   expect(buildCommand("run", { cwd: "C:\\temp", envFallback: "cmd" })).toContain(
     'cd /d "C:\\temp"',
   );

@@ -39,6 +39,7 @@ Use `signal` to cancel before a command ends.
 Set `cwd` to a remote path.
 The client uses shell quoting when it adds the path to the command.
 The client rejects unsupported shell characters in `cwd`.
+Set `envFallback` to match the remote shell when it is not a POSIX shell.
 
 ## Set environment values
 
