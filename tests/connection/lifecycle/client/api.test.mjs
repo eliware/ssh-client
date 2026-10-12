@@ -34,6 +34,14 @@ test("exposes open state and rejects operations after close", async () => {
   });
 });
 
+test("marks the reusable API closed when its transport closes", () => {
+  const client = new EventEmitter();
+  const api = createReusableClientApi(client, { host: "router", privateKey: "KEY" });
+  expect(api.state).toBe("open");
+  client.emit("close");
+  expect(api.state).toBe("closed");
+});
+
 const integrationReady =
   process.env.SSH_CLIENT_INTEGRATION === "1" &&
   process.env.SSH_CLIENT_INTEGRATION_HOST &&

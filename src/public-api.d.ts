@@ -6,7 +6,7 @@ export interface SshConnectionOptions {
   host: string;
   port?: number;
   username?: string;
-  privateKey?: string;
+  privateKey?: string | Buffer;
   privateKeyPath?: string;
   passphrase?: string;
   password?: string;
@@ -101,12 +101,12 @@ export declare function createHostVerifier(options: {
   hostCaPath?: string;
 }): HostVerifier;
 export declare function loadKey(options?: {
-  privateKey?: string;
+  privateKey?: string | Buffer;
   privateKeyPath?: string;
   passphrase?: string;
   fsLib?: any;
   homedirFn?: () => string;
-}): Promise<string>;
+}): Promise<string | Buffer>;
 export declare function expandPath(value: string, homedirFn?: () => string): string;
 export declare function upload(options: SshConnectionOptions & UploadOptions): Promise<void>;
 export declare function download(options: SshConnectionOptions & DownloadOptions): Promise<void>;

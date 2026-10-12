@@ -6,6 +6,9 @@ import { createReusableOperations } from "../../reusable/operations.mjs";
 export function createReusableClientApi(client, options) {
   let closePromise;
   const state = createConnectionState();
+  const markClosed = () => state.set("closed");
+  client.once?.("end", markClosed);
+  client.once?.("close", markClosed);
   const close = () => {
     if (closePromise) return closePromise;
     closePromise = closeConnection(client, (value) => state.set(value));
