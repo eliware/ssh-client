@@ -59,6 +59,41 @@ test("delegates reusable command and transfer operations", async () => {
     reusableDownload(client, { remotePath: "remote", localPath: "local" }),
   ).resolves.toBeUndefined();
 });
+
+test("removes connection listeners after reusable exec success and failure", async () => {
+  class ReusableClient extends EventEmitter {
+    fail = false;
+
+    connect() {
+      this.emit("ready");
+    }
+
+    end() {}
+
+    exec(_command, callback) {
+      if (this.fail) return callback(Error("exec failed"));
+      const stream = new EventEmitter();
+      stream.stderr = new EventEmitter();
+      callback(null, stream);
+      queueMicrotask(() => stream.emit("close", 0));
+    }
+  }
+
+  const client = new ReusableClient();
+  const options = { host: "router", privateKey: "KEY" };
+  await reusableExec(client, options, ["one"]);
+  expect(client.listenerCount("ready")).toBe(0);
+  expect(client.listenerCount("error")).toBe(0);
+  expect(client.listenerCount("end")).toBe(0);
+  expect(client.listenerCount("close")).toBe(0);
+
+  client.fail = true;
+  await expect(reusableExec(client, options, ["two"])).rejects.toMatchObject({ code: "SSH_EXEC" });
+  expect(client.listenerCount("ready")).toBe(0);
+  expect(client.listenerCount("error")).toBe(0);
+  expect(client.listenerCount("end")).toBe(0);
+  expect(client.listenerCount("close")).toBe(0);
+});
 test("keeps reusable transport alive after command timeout", async () => {
   class ReusableTimeoutClient {
     on(event, fn) {
