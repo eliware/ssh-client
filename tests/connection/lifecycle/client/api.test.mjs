@@ -1,4 +1,5 @@
 import { expect, jest, test } from "@jest/globals";
+import { EventEmitter } from "node:events";
 import { promises as fs } from "node:fs";
 import { join } from "node:path";
 import { tmpdir, homedir } from "node:os";
@@ -107,6 +108,22 @@ test("closes the reusable API when shell setup times out", async () => {
   const api = createReusableClientApi(client, { host: "router", privateKey: "KEY" });
   await expect(api.shell({ timeout: 1 })).rejects.toMatchObject({ code: "SSH_TIMEOUT" });
   expect(api.state).toBe("closed");
+});
+
+test("closes the transport after an open shell stream fails", async () => {
+  const client = new EventEmitter();
+  const stream = new EventEmitter();
+  client.shell = (callback) => callback(null, stream);
+  client.end = jest.fn(() => client.emit("close"));
+  stream.close = jest.fn();
+  stream.end = jest.fn();
+  const api = createReusableClientApi(client, { host: "router", privateKey: "KEY" });
+  const session = await api.shell();
+  const failed = expect(session.completion).rejects.toMatchObject({ code: "SSH_SHELL" });
+  stream.emit("error", Error("shell failed"));
+  await failed;
+  expect(api.state).toBe("closed");
+  expect(client.end).toHaveBeenCalledTimes(1);
 });
 
 test("closes the reusable API when an execution times out", async () => {

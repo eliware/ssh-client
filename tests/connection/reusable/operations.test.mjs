@@ -31,8 +31,14 @@ beforeEach(() => {
   reusableDownload.mockResolvedValue("download");
 });
 
-function createOperations(state = { isOpen: () => true }, serialize = (invoke) => invoke()) {
-  return createReusableOperations({ client: "client", options: "options", state, serialize });
+function createOperations(state = { isOpen: () => true }, serialize = (invoke) => invoke(), close) {
+  return createReusableOperations({
+    client: "client",
+    options: "options",
+    state,
+    close,
+    serialize,
+  });
 }
 
 test("runs open operations with their inputs and queue policy", async () => {
@@ -141,4 +147,20 @@ test("closes state when an open shell reports a stream failure", async () => {
   await rejected;
   await Promise.resolve();
   expect(state.value).toBe("closed");
+});
+
+test("handles close failure after an open shell stream fails", async () => {
+  let rejectCompletion;
+  const completion = new Promise((_, reject) => {
+    rejectCompletion = reject;
+  });
+  openShell.mockResolvedValueOnce({ completion });
+  const close = jest.fn(() => Promise.reject(Error("close failed")));
+  const state = { isOpen: () => true, set: jest.fn() };
+  const session = await createOperations(state, undefined, close).shell();
+  const failed = expect(session.completion).rejects.toMatchObject({ code: "SSH_SHELL" });
+  rejectCompletion(Object.assign(Error("shell stream failed"), { code: "SSH_SHELL" }));
+  await failed;
+  await new Promise((resolve) => setImmediate(resolve));
+  expect(close).toHaveBeenCalledTimes(1);
 });

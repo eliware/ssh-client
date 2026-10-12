@@ -3,7 +3,7 @@ import { reusableExec, reusableUpload, reusableDownload } from "../../operations
 import { closeOnTransportFailure } from "./failure-state.mjs";
 import { unavailableOperation } from "./unavailable.mjs";
 
-export function createReusableOperations({ client, options, state, serialize }) {
+export function createReusableOperations({ client, options, state, close, serialize }) {
   const unavailable = unavailableOperation;
   const admit = (operation, action, queued = false) => {
     if (!state.isOpen()) return unavailable(operation);
@@ -29,6 +29,8 @@ export function createReusableOperations({ client, options, state, serialize }) 
         ).then((session) => {
           session.completion?.catch((error) => {
             closeOnTransportFailure(state, error);
+            const closing = close?.();
+            closing?.catch(() => {});
           });
           return session;
         }),

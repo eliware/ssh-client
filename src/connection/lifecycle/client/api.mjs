@@ -6,10 +6,19 @@ import { createReusableOperations } from "../../reusable/operations.mjs";
 export function createReusableClientApi(client, options) {
   let closePromise;
   const state = createConnectionState();
+  const close = () => {
+    if (closePromise) return closePromise;
+    closePromise = closeConnection(client, (value) => state.set(value));
+    closePromise.catch(() => {
+      closePromise = undefined;
+    });
+    return closePromise;
+  };
   const operations = createReusableOperations({
     client,
     options,
     state,
+    close,
     serialize: createOperationQueue(),
   });
   return {
@@ -17,13 +26,6 @@ export function createReusableClientApi(client, options) {
       return state.value;
     },
     ...operations,
-    close: () => {
-      if (closePromise) return closePromise;
-      closePromise = closeConnection(client, (value) => state.set(value));
-      closePromise.catch(() => {
-        closePromise = undefined;
-      });
-      return closePromise;
-    },
+    close,
   };
 }
