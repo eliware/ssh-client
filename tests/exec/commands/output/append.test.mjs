@@ -31,3 +31,19 @@ test("ignores output after truncation and closes at exhausted budget", () => {
   appendOutput(state, "stdout", "later", 3, () => channel);
   expect(state.merged).toBe("");
 });
+
+test("closes the channel when one chunk reaches the byte limit", () => {
+  const state = {
+    stdout: "",
+    stderr: "",
+    merged: "",
+    stdoutBytes: 0,
+    stderrBytes: 0,
+    truncated: false,
+  };
+  const channel = { close: jest.fn() };
+  appendOutput(state, "stdout", "abc", 3, () => channel);
+  expect(state.stdout).toBe("abc");
+  expect(state.truncated).toBe(true);
+  expect(channel.close).toHaveBeenCalledTimes(1);
+});

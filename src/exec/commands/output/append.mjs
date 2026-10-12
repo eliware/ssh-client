@@ -20,7 +20,7 @@ export function appendOutput(state, target, data, maxOutput, getChannel) {
     state.stderr += value;
     state.stderrBytes += consumed;
   }
-  if (Buffer.byteLength(value) < bytes.length || bytes.length > remaining) {
+  if (current + consumed >= maxOutput || bytes.length > remaining) {
     state.truncated = true;
     getChannel()?.close?.();
   }
