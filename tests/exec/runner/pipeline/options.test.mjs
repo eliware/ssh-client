@@ -22,6 +22,27 @@ test("prepares normalized execution defaults and timeout override", async () => 
   expect(config.verifier).toEqual(expect.any(Function));
 });
 
+test("uses USERNAME when USER is empty", async () => {
+  const user = process.env.USER;
+  const username = process.env.USERNAME;
+  delete process.env.USER;
+  process.env.USERNAME = "fallback-user";
+  try {
+    const config = await prepareExecution({
+      host: "router",
+      commands: [],
+      privateKey: "KEY",
+      ClientClass: class {},
+    });
+    expect(config.username).toBe("fallback-user");
+  } finally {
+    if (user === undefined) delete process.env.USER;
+    else process.env.USER = user;
+    if (username === undefined) delete process.env.USERNAME;
+    else process.env.USERNAME = username;
+  }
+});
+
 test("rejects aborted execution during option preparation", async () => {
   const controller = new AbortController();
   controller.abort();
