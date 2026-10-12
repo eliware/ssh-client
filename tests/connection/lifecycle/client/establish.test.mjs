@@ -48,6 +48,20 @@ test("rejects when client construction throws", async () => {
   ).rejects.toMatchObject({ code: "SSH_CONNECTION" });
 });
 
+test("normalizes null thrown by the transport constructor", async () => {
+  await expect(
+    connect({
+      host: "router",
+      privateKey: "KEY",
+      ClientClass: class {
+        constructor() {
+          throw null;
+        }
+      },
+    }),
+  ).rejects.toMatchObject({ code: "SSH_CONNECTION", message: "SSH connection error: null" });
+});
+
 test("rejects when the transport connect call throws", async () => {
   class ThrowingClient {
     once() {
