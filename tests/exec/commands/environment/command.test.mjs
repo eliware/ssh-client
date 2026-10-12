@@ -8,6 +8,13 @@ test("builds commands with environment fallbacks and safe quoting", () => {
   );
   expect(
     buildCommand("run", {
+      cwd: "/tmp",
+      env: { KNIT_TEST: "yes" },
+      envFallback: "posix",
+    }),
+  ).toBe("export KNIT_TEST='yes'; cd '/tmp' && run");
+  expect(
+    buildCommand("run", {
       cwd: "C:\\temp\\dir",
       env: { KNIT_TEST: "yes" },
       envFallback: "powershell",
@@ -20,6 +27,13 @@ test("builds commands with environment fallbacks and safe quoting", () => {
   expect(buildCommand("run", { cwd: "C:\\temp", envFallback: "cmd" })).toContain(
     'cd /d "C:\\temp"',
   );
+  expect(
+    buildCommand("run", {
+      cwd: "C:\\temp",
+      env: { KNIT_TEST: "yes" },
+      envFallback: "cmd",
+    }),
+  ).toBe('set "KNIT_TEST=yes" && cd /d "C:\\temp" && run');
 });
 test("forwards environment requests without shell fallback", async () => {
   let options;
