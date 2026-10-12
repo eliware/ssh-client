@@ -51,6 +51,15 @@ test("accepts a matching host key and rejects an unknown key", async () => {
   await expect(verify("unknown")).resolves.toBe(false);
 });
 
+test("rejects a key with both trusted and revoked records", async () => {
+  const verify = createHostVerifier({
+    host: "router",
+    knownHosts: "router ssh-test trusted\n@revoked router ssh-test trusted",
+    utils: createUtils(),
+  });
+  await expect(verify("trusted")).resolves.toBe(false);
+});
+
 test("matches the OpenSSH host form for each port", async () => {
   const utils = createUtils();
   const defaultPort = createHostVerifier({
