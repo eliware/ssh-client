@@ -3,6 +3,7 @@ import { encodeString } from "./encoding/encode-string.mjs";
 import { readUint64 } from "./encoding/read-uint64.mjs";
 import { readUint32 } from "./encoding/read-uint32.mjs";
 import { readPrincipals } from "./certificates/principals.mjs";
+import { validateCertificateOptions } from "./certificates/options.mjs";
 
 const CERT_SUFFIX = "-cert-v01@openssh.com";
 
@@ -43,9 +44,12 @@ export function parseCertificate(key) {
   offset = after.next;
   const before = readUint64(key, offset);
   offset = before.next;
+  const critical = readString(key, offset);
+  offset = critical.next;
+  const extensions = readString(key, offset);
+  offset = extensions.next;
   offset = readString(key, offset).next;
-  offset = readString(key, offset).next;
-  offset = readString(key, offset).next;
+  validateCertificateOptions(critical.value, extensions.value);
   const signingKey = readString(key, offset);
   offset = signingKey.next;
   const signed = key.subarray(0, offset);

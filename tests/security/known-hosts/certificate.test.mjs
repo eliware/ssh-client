@@ -11,7 +11,14 @@ const string = (value) => {
 function certificate(
   type,
   publicFields,
-  { principals = ["router"], signingKey = "ca", signature = "sig" } = {},
+  {
+    principals = ["router"],
+    signingKey = "ca",
+    signature = "sig",
+    critical = Buffer.alloc(0),
+    extensions = Buffer.alloc(0),
+    reserved = "",
+  } = {},
 ) {
   const principalList = Buffer.concat(principals.map(string));
   const uint64 = (value) => {
@@ -31,9 +38,9 @@ function certificate(
     string(principalList),
     uint64(100),
     uint64(200),
-    string(""),
-    string(""),
-    string(""),
+    string(critical),
+    string(extensions),
+    string(reserved),
     string(signingKey),
     string(signature),
   ]);
@@ -86,4 +93,23 @@ test("parses an empty principal list and rejects unsupported certificate data", 
   expect(() => parseCertificate(Buffer.concat([malformed, Buffer.from([0])]))).toThrow(
     "invalid host certificate signature fields",
   );
+});
+
+test("rejects critical options and malformed extension data", () => {
+  const type = "ssh-ed25519-cert-v01@openssh.com";
+  const option = Buffer.concat([string("force-command"), string(string("command"))]);
+  expect(() => parseCertificate(certificate(type, ["key"], { critical: option }))).toThrow(
+    "unsupported host certificate critical options",
+  );
+  expect(() =>
+    parseCertificate(certificate(type, ["key"], { extensions: Buffer.from([0, 0, 0]) })),
+  ).toThrow("truncated");
+});
+
+test("parses valid extensions and ignores the reserved field", () => {
+  const type = "ssh-ed25519-cert-v01@openssh.com";
+  const extensions = Buffer.concat([string("permit-pty"), string("")]);
+  expect(
+    parseCertificate(certificate(type, ["key"], { extensions, reserved: "reserved" })),
+  ).toMatchObject({ base: "ssh-ed25519" });
 });

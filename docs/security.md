@@ -30,6 +30,7 @@ Use one public key record on each line in a CA file.
 Trust a certificate only when a trusted CA signed it.
 Match its principal to the host name or `[host]:port` value.
 Check that its validity period includes the current time.
+The client rejects certificates with critical options because it does not enforce them.
 
 ## Use a custom verifier
 
