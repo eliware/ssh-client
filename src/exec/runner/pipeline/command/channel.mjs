@@ -1,10 +1,6 @@
-import { attachChannel } from "../../commands/channel.mjs";
-import { handleCommandClose } from "./command-close.mjs";
-import {
-  handleCommandError,
-  handleStderrError,
-  commandInvocationError,
-} from "./command-errors.mjs";
+import { attachChannel } from "../../../commands/channel.mjs";
+import { handleCommandClose } from "./close.mjs";
+import { handleCommandError, handleStderrError, commandInvocationError } from "./errors.mjs";
 
 export function attachCommandChannel({
   stream,

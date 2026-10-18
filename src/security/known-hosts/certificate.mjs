@@ -1,7 +1,7 @@
-import { readString } from "./encoding/read-string.mjs";
+import { readString } from "./encoding/read/string.mjs";
 import { encodeString } from "./encoding/encode-string.mjs";
-import { readUint64 } from "./encoding/read-uint64.mjs";
-import { readUint32 } from "./encoding/read-uint32.mjs";
+import { readUint64 } from "./encoding/read/uint64.mjs";
+import { readUint32 } from "./encoding/read/uint32.mjs";
 import { readPrincipals } from "./certificates/principals.mjs";
 import { validateCertificateOptions } from "./certificates/options.mjs";
 

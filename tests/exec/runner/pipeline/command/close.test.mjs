@@ -1,5 +1,11 @@
-import { expect, jest, test } from "@jest/globals";
-import { handleCommandClose } from "../../../../src/exec/runner/pipeline/command-close.mjs";
+import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
+import { handleCommandClose } from "../../../../../src/exec/runner/pipeline/command/close.mjs";
+
+beforeEach(() => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date("2026-10-17T12:00:00.000Z"));
+});
+afterEach(() => jest.useRealTimers());
 
 test("assembles command result and advances queue", async () => {
   const context = {
@@ -23,7 +29,7 @@ test("assembles command result and advances queue", async () => {
     markCompleted: jest.fn(),
     next,
   });
-  await new Promise((resolve) => setImmediate(resolve));
+  await jest.runAllTimersAsync();
   expect(context.results[0]).toMatchObject({ command: "echo", stdout: "out", code: 0 });
   expect(next).toHaveBeenCalled();
 });

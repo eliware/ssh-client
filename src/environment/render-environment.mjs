@@ -1,6 +1,6 @@
 import { SshError } from "../errors.mjs";
-import { quotePowerShell } from "./quote-powershell.mjs";
-import { quotePosix } from "./quote-posix.mjs";
+import { quotePowerShell } from "./quote/powershell.mjs";
+import { quotePosix } from "./quote/posix.mjs";
 
 export function renderEnvironment(command, env, mode) {
   if (!env) return command;

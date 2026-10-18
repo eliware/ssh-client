@@ -7,7 +7,7 @@ export function validateConnectionOptions(options, Client, connectTimeout) {
     throw new SshError("hostVerifier must be a function", "SSH_INVALID_OPTIONS");
   const port = defaultConnectionPort(options.port);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
-    throw new SshError("port must be valid", "SSH_INVALID_OPTIONS");
+    throw new SshError("TCP endpoint number must be valid", "SSH_INVALID_OPTIONS");
   if (!Number.isFinite(connectTimeout) || connectTimeout <= 0)
     throw new SshError("connectTimeout must be positive", "SSH_INVALID_OPTIONS");
   if (

@@ -1,4 +1,4 @@
-import { createCommandQueue } from "./queue.mjs";
+import { createCommandQueue } from "../queue.mjs";
 
 export function createExecutionQueue(config, state, finish) {
   return createCommandQueue({

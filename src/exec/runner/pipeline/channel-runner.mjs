@@ -3,7 +3,7 @@ import { buildCommand } from "../../commands/environment/command.mjs";
 import { createOutputCollector } from "../../commands/output/collector.mjs";
 import { startCommandTimeout } from "../../commands/timeout.mjs";
 import { invokeCommand } from "../../commands/invoke.mjs";
-import { attachCommandChannel, commandInvocationError } from "./command-channel.mjs";
+import { attachCommandChannel, commandInvocationError } from "./command/channel.mjs";
 
 export function runCommand(context, command, next) {
   const started = Date.now();

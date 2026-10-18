@@ -1,7 +1,10 @@
-import { expect, jest, test } from "@jest/globals";
+import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import { EventEmitter } from "node:events";
 import { createOutputCollector } from "../../../../src/exec/commands/output/collector.mjs";
 import { sshExec } from "../../../../src/exec/runner/pipeline/execute.mjs";
+
+beforeEach(() => jest.useFakeTimers());
+afterEach(() => jest.useRealTimers());
 
 test("collects stdout and stderr up to the byte limit", () => {
   const close = jest.fn();
@@ -124,7 +127,7 @@ test("covers channel output limits and stderr failures", async () => {
     maxOutput: 1,
     ClientClass: BranchClient,
   });
-  await new Promise((resolve) => setImmediate(resolve));
+  await jest.runAllTimersAsync();
   streamHandlers.data(Buffer.from("x"));
   streamHandlers.data(Buffer.from("late"));
   streamHandlers.close();
@@ -135,7 +138,7 @@ test("covers channel output limits and stderr failures", async () => {
     privateKey: "KEY",
     ClientClass: BranchClient,
   });
-  await new Promise((resolve) => setImmediate(resolve));
+  await jest.runAllTimersAsync();
   stderrHandlers.error({});
   await expect(failed).rejects.toMatchObject({ code: "SSH_EXEC" });
   callback?.(null, { close: jest.fn() });

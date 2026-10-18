@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { quoteShell } from "../../src/environment/quote-shell.mjs";
+import { quoteShell } from "../../../src/environment/quote/shell.mjs";
 
 test("selects the requested shell quoting policy", () => {
   expect(quoteShell("value")).toBe("'value'");

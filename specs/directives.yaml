@@ -1,5 +1,5 @@
-version: "12.0"
-description: Defines product requirements for the SSH client.
+version: "13.0"
+description: Lists requirements for the SSH client library.
 directives:
   - id: E-250.0
     dos:

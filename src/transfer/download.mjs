@@ -1,5 +1,5 @@
 import { validateTransferOptions } from "./options/validate.mjs";
-import { invokeDownload } from "./session/invoke-download.mjs";
+import { invokeDownload } from "./session/invoke/download.mjs";
 import { runTransfer } from "./session.mjs";
 
 export function download(client, config) {

@@ -29,7 +29,7 @@ export function startExecutionConnection(config, handlers) {
   }
   if (typeof conn.on !== "function" || typeof conn.connect !== "function")
     throw new SshError(
-      "SSH client does not implement the required transport interface",
+      "SSH client does not provide the required transport interface",
       "SSH_CONNECTION",
     );
   const timer = startConnectionTimeout(connectTimeout, handlers.onTimeout);

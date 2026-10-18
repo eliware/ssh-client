@@ -2,16 +2,16 @@
 
 ## Check the options
 
-Confirm that `host` is set and `port` is between 1 and 65535.
+Confirm that `host` is set and the TCP endpoint number is between 1 and 65535.
 Confirm that `commands` is an array of strings for `sshExec`.
 Check each required file path and option value.
 
 ## Check host verification
 
-Confirm that the host name and port match the known-host record.
+Confirm that the host name and endpoint number match the known-host record.
 Confirm that the record key matches the SSH server key.
-For a host certificate, confirm that its principal includes the host name or IP address.
-Check that the certificate is valid now and that its CA key is trusted.
+For a host certificate, confirm that its host identity includes the host name or IP address.
+Check that the certificate is valid at the current time and that its CA key is trusted.
 Read [host verification](security.md) for supported records.
 
 ## Check authentication
@@ -30,5 +30,5 @@ Check network access before you increase a timeout.
 
 ## Check an error code
 
-Read the error code and `context` fields before you handle an error.
+Read the error code and `context` fields before you process an error.
 See [API errors](api.md#errors) for error codes.

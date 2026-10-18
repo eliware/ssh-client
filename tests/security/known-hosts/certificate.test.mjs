@@ -99,7 +99,7 @@ test("rejects critical options and malformed extension data", () => {
   const type = "ssh-ed25519-cert-v01@openssh.com";
   const option = Buffer.concat([string("force-command"), string(string("command"))]);
   expect(() => parseCertificate(certificate(type, ["key"], { critical: option }))).toThrow(
-    "unsupported host certificate critical options",
+    "unsupported host certificate options",
   );
   expect(() =>
     parseCertificate(certificate(type, ["key"], { extensions: Buffer.from([0, 0, 0]) })),

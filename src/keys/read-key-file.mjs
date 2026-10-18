@@ -3,7 +3,7 @@ export async function readKeyFile(paths, fsLib) {
     try {
       return await fsLib.readFile(path, "utf8");
     } catch {
-      // Probe the next configured key source.
+      // Check one more configured key file.
     }
   }
   return undefined;

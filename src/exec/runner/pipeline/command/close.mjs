@@ -1,4 +1,4 @@
-import { createCommandResult } from "../../commands/result.mjs";
+import { createCommandResult } from "../../../commands/result.mjs";
 
 export function handleCommandClose({
   context,

@@ -1,13 +1,13 @@
-# Transfer files
+# Copy files
 
-Use `upload()` and `download()` for a single transfer.
-Use `ssh.upload()` or `ssh.download()` on a reusable connection.
-Transfers use SFTP.
+Use `upload()` and `download()` for one file copy.
+Use `ssh.upload()` or `ssh.download()` on a long-lived connection.
+These file copies use SFTP.
 
 ## Upload a file
 
 Pass a local path and a remote path.
-Set `mode` to apply a remote permission mask when needed.
+Set `mode` to apply remote permission bits when required.
 
 ```js
 import { upload } from "@eliware/ssh-client";
@@ -40,8 +40,8 @@ await download({
 });
 ```
 
-Set `timeout` in milliseconds to limit a transfer.
+Set `timeout` in milliseconds to limit a file copy.
 The default is `0`, which sets no time limit.
-Pass an `AbortSignal` to cancel a transfer.
-The client closes the SFTP session when a transfer ends.
-Read [connections](connections.md) for reusable connection setup.
+Pass an `AbortSignal` to cancel a file copy.
+The client closes the SFTP session when a file copy ends.
+Read [connections](connections.md) for long-lived connection setup.

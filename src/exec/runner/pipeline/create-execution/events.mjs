@@ -1,4 +1,4 @@
-import { createExecutionConnectionEvents } from "./connection-events.mjs";
+import { createExecutionConnectionEvents } from "../connection-events.mjs";
 
 export function createExecutionEvents(state, finish) {
   return createExecutionConnectionEvents({

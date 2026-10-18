@@ -1,6 +1,6 @@
 # Connections and authentication
 
-## Open a reusable connection
+## Open a long-lived connection
 
 Call `connect()` with host, authentication, and host verification options.
 The connection opens before `connect()` resolves.
@@ -25,10 +25,10 @@ try {
 ```
 
 The `state` value is `open`, `closing`, or `closed`.
-The client queues `exec`, `upload`, and `download` calls on a reusable connection.
-Call `shell()` when you need an interactive shell.
+The client queues `exec`, `upload`, and `download` calls on one connection.
+Call `shell()` to open an interactive shell.
 
-## Choose authentication
+## Select authentication
 
 Use `privateKey` for key text in memory.
 Use `privateKeyPath` for a key file.
@@ -45,7 +45,7 @@ The default is `10000` milliseconds.
 
 ## Close the connection
 
-Call `await ssh.close()` once your operations finish.
+Call `await ssh.close()` when your operations end.
 The close operation ends the SSH transport and sets `state` to `closed`.
 Do not call more operations after close.
 

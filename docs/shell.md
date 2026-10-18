@@ -1,6 +1,6 @@
 # Open an interactive shell
 
-Call `shell()` on a reusable connection.
+Call `shell()` on a long-lived connection.
 Use `onData` to read output and `onInput` to receive the shell stream.
 
 ```js
@@ -37,7 +37,7 @@ Pass an `AbortSignal` to cancel shell setup.
 
 The shell session is a Node.js read-write stream.
 Call `shell.close()` to close the shell session.
-Read `shell.completion` to get the exit code and signal when the shell ends.
+Read `shell.completion` to receive the exit code and signal when the shell ends.
 Call `ssh.close()` when all work on the connection ends.
 
 Read [connection guidance](connections.md) before you open a shell.

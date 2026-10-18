@@ -3,7 +3,7 @@
 ## Requirements
 
 Use Node.js 26 or later. Use a server that accepts SSH connections.
-Get trusted host-key data before you connect. See [host verification](security.md).
+Read trusted host-key data before you connect. See [host verification](security.md).
 
 ## Install
 
@@ -16,7 +16,7 @@ npm install @eliware/ssh-client
 ## Run one command
 
 Import `sshExec`. Set the host, user, trusted host key, and command.
-Replace each example value with data from your SSH service.
+Replace each example value with data from your SSH server.
 
 ```js
 import { sshExec } from "@eliware/ssh-client";
@@ -35,9 +35,9 @@ console.log(results[0].stdout);
 `sshExec` opens a connection, runs commands in order, and closes the connection.
 Read [command options](commands.md) for output, timeout, and cancellation details.
 
-## Use a reusable connection
+## Use a long-lived connection
 
-Call `connect` when you need several operations on one connection.
+Call `connect` when you require multiple operations on one connection.
 Call `close` when your work ends.
 
 ```js
@@ -58,14 +58,14 @@ try {
 }
 ```
 
-The connection also supports shells and SFTP transfers.
-Read [connections](connections.md), [shells](shell.md), and [file transfers](transfers.md).
+The connection also supports shells and SFTP file copies.
+Read [connections](connections.md), [shells](shell.md), and [file copies](transfers.md).
 
 ## Load a key
 
 Pass `privateKey` to use key text in memory.
 Pass `privateKeyPath` to read a key file.
-If you set neither, the client checks `SSH_PRIVATE_KEY_PATH`, `~/.ssh/id_ed25519`, then `~/.ssh/id_rsa`.
-Pass `passphrase` when the key needs one.
+If you omit both key options, the client checks `SSH_PRIVATE_KEY_PATH`, `~/.ssh/id_ed25519`, then `~/.ssh/id_rsa`.
+Pass `passphrase` when the key requires one.
 
 Keep key text and passwords outside source control.

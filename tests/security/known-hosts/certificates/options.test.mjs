@@ -16,7 +16,7 @@ test("accepts empty critical options and valid extensions", () => {
 test("rejects critical options and duplicate names", () => {
   const option = Buffer.concat([string("force-command"), string("command")]);
   expect(() => validateCertificateOptions(option, Buffer.alloc(0))).toThrow(
-    "unsupported host certificate critical options",
+    "unsupported host certificate options",
   );
   expect(() =>
     validateCertificateOptions(Buffer.alloc(0), Buffer.concat([option, option])),

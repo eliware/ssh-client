@@ -1,4 +1,4 @@
-import { expect, jest, test, beforeEach } from "@jest/globals";
+import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 
 const openShell = jest.fn();
 const reusableExec = jest.fn();
@@ -20,6 +20,7 @@ const { createReusableOperations } =
   await import("../../../src/connection/reusable/operations.mjs");
 
 beforeEach(() => {
+  jest.useFakeTimers();
   jest.clearAllMocks();
   closeOnTransportFailure.mockImplementation((state, error) => {
     if (["SSH_TIMEOUT", "SSH_SHELL"].includes(error.code)) state.set("closed");
@@ -30,6 +31,8 @@ beforeEach(() => {
   reusableUpload.mockResolvedValue("upload");
   reusableDownload.mockResolvedValue("download");
 });
+
+afterEach(() => jest.useRealTimers());
 
 function createOperations(state = { isOpen: () => true }, serialize = (invoke) => invoke(), close) {
   return createReusableOperations({
@@ -161,6 +164,6 @@ test("handles close failure after an open shell stream fails", async () => {
   const failed = expect(session.completion).rejects.toMatchObject({ code: "SSH_SHELL" });
   rejectCompletion(Object.assign(Error("shell stream failed"), { code: "SSH_SHELL" }));
   await failed;
-  await new Promise((resolve) => setImmediate(resolve));
+  await Promise.resolve();
   expect(close).toHaveBeenCalledTimes(1);
 });

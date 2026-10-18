@@ -2,7 +2,7 @@ import { SshError } from "../../errors.mjs";
 
 export function transferSetupError(operation, error, handle) {
   return new SshError(
-    `${operation} setup failed: ${error?.message || (error ? String(error) : "missing SFTP handle")}`,
+    `${operation} setup failed: ${error?.message || (error ? String(error) : "missing SFTP session")}`,
     "SSH_SFTP",
     error,
     { operation, phase: "setup", handle },

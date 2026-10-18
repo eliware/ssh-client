@@ -1,4 +1,4 @@
-import { readString } from "../encoding/read-string.mjs";
+import { readString } from "../encoding/read/string.mjs";
 
 export function validateCertificateOptions(critical, extensions) {
   for (const [field, required] of [
@@ -16,6 +16,6 @@ export function validateCertificateOptions(critical, extensions) {
       if (!text || names.has(text)) throw new Error("invalid host certificate options");
       names.add(text);
     }
-    if (required && field.length) throw new Error("unsupported host certificate critical options");
+    if (required && field.length) throw new Error("unsupported host certificate options");
   }
 }

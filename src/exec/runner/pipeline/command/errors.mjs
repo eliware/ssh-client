@@ -1,4 +1,4 @@
-import { channelError, commandError, stderrError } from "./errors.mjs";
+import { channelError, commandError, stderrError } from "../errors.mjs";
 
 export function handleCommandError(context, error, isCompleted, markCompleted) {
   if (isCompleted()) return;

@@ -15,6 +15,6 @@ export function detachConnectionLifecycle(client, handlers) {
     client?.removeListener?.("end", handlers.onEnd);
     client?.removeListener?.("close", handlers.onClose);
   } catch {
-    // Listener cleanup is best effort for partial transports.
+    // Listener cleanup can fail when a transport omits this method.
   }
 }

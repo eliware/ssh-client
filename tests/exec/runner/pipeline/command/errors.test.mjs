@@ -3,7 +3,7 @@ import {
   handleCommandError,
   handleStderrError,
   commandInvocationError,
-} from "../../../../src/exec/runner/pipeline/command-errors.mjs";
+} from "../../../../../src/exec/runner/pipeline/command/errors.mjs";
 
 test("settles command and stderr errors once", () => {
   const context = { finish: jest.fn(), clearActiveTimer: jest.fn() };

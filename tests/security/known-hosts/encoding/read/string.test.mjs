@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { readString } from "../../../../src/security/known-hosts/encoding/read-string.mjs";
+import { readString } from "../../../../../src/security/known-hosts/encoding/read/string.mjs";
 
 test("reads SSH strings and rejects truncation", () => {
   const encoded = Buffer.from([0, 0, 0, 4, 104, 111, 115, 116]);

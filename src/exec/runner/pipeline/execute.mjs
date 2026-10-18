@@ -1,7 +1,7 @@
 import { SshError } from "../../../errors.mjs";
 import { completeExecution } from "./completion.mjs";
-import { createExecutionEvents } from "./create-execution-events.mjs";
-import { createExecutionQueue } from "./create-execution-queue.mjs";
+import { createExecutionEvents } from "./create-execution/events.mjs";
+import { createExecutionQueue } from "./create-execution/queue.mjs";
 import { createFinisher } from "./finisher.mjs";
 import { startExecutionConnection } from "./connection.mjs";
 import { prepareExecutionWithCancellation } from "./prepare-execution.mjs";

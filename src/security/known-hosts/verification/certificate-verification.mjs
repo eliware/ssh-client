@@ -1,4 +1,4 @@
-import { readString } from "../encoding/read-string.mjs";
+import { readString } from "../encoding/read/string.mjs";
 
 const MAX_TIME = 0xffffffffffffffffn;
 export function verifyCertificate(

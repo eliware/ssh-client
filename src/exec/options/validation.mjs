@@ -17,7 +17,7 @@ export function validateOptions({
   if (!commands.every((command) => typeof command === "string"))
     throw new SshError("commands[] must contain only strings", "SSH_INVALID_OPTIONS");
   if (!Number.isInteger(port) || port < 1 || port > 65535)
-    throw new SshError("port must be valid", "SSH_INVALID_OPTIONS");
+    throw new SshError("TCP endpoint number must be valid", "SSH_INVALID_OPTIONS");
   if (!Number.isFinite(maxOutput) || maxOutput <= 0)
     throw new SshError("maxOutput must be a positive number", "SSH_INVALID_OPTIONS");
   if (!Number.isFinite(connectTimeout) || connectTimeout <= 0)
@@ -45,7 +45,7 @@ export function validateOptions({
     throw new SshError("envFallback must be posix, powershell, or cmd", "SSH_INVALID_OPTIONS");
   if (shell)
     throw new SshError(
-      "shell is not supported by sshExec; use connect().shell()",
+      "sshExec does not support shell. Use connect().shell() to open a shell.",
       "SSH_INVALID_OPTIONS",
     );
 }

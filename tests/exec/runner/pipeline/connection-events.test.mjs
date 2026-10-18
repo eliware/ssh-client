@@ -1,5 +1,8 @@
-import { expect, jest, test } from "@jest/globals";
+import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import { createExecutionConnectionEvents } from "../../../../src/exec/runner/pipeline/connection-events.mjs";
+
+beforeEach(() => jest.useFakeTimers());
+afterEach(() => jest.useRealTimers());
 
 test("normalizes connection errors and closes during command setup", async () => {
   const finish = jest.fn();
@@ -22,7 +25,7 @@ test("normalizes connection errors and closes during command setup", async () =>
   expect(finish).toHaveBeenCalledWith(expect.objectContaining({ code: "SSH_CONNECTION" }));
   events.onClosed();
   expect(state.closed).toBe(true);
-  await new Promise((resolve) => setImmediate(resolve));
+  await jest.runAllTimersAsync();
   expect(finish).toHaveBeenCalledWith(expect.objectContaining({ code: "SSH_CONNECTION" }));
 });
 
@@ -43,7 +46,7 @@ test("rejects a close during command setup when the channel callback never arriv
   });
   events.onClosed();
   expect(finish).not.toHaveBeenCalled();
-  await new Promise((resolve) => setImmediate(resolve));
+  await jest.runAllTimersAsync();
   expect(finish).toHaveBeenCalledTimes(1);
   expect(finish).toHaveBeenCalledWith(expect.objectContaining({ code: "SSH_CONNECTION" }));
 });

@@ -1,4 +1,4 @@
-import { readString } from "../encoding/read-string.mjs";
+import { readString } from "../encoding/read/string.mjs";
 
 export function readPrincipals(value) {
   const result = [];

@@ -1,6 +1,12 @@
-import { expect, test } from "@jest/globals";
+import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import { createCommandResult } from "../../../src/exec/commands/result.mjs";
 import { sshExec } from "../../../src/exec/runner/pipeline/execute.mjs";
+
+beforeEach(() => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date("2026-10-17T12:00:00.000Z"));
+});
+afterEach(() => jest.useRealTimers());
 
 test("creates a normalized command result from exit and close state", () => {
   const result = createCommandResult({

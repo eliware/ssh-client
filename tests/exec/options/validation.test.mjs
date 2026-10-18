@@ -21,9 +21,9 @@ test("validates every execution option boundary", () => {
   expect(() => validateOptions(valid)).not.toThrow();
   const invalid = [
     [{ ...valid, commands: ["run", 1] }, "commands[]"],
-    [{ ...valid, port: 0 }, "port"],
-    [{ ...valid, port: 65536 }, "port"],
-    [{ ...valid, port: 22.5 }, "port"],
+    [{ ...valid, port: 0 }, "TCP endpoint number"],
+    [{ ...valid, port: 65536 }, "TCP endpoint number"],
+    [{ ...valid, port: 22.5 }, "TCP endpoint number"],
     [{ ...valid, maxOutput: Infinity }, "maxOutput"],
     [{ ...valid, connectTimeout: NaN }, "connectTimeout"],
     [{ ...valid, commandTimeout: -1 }, "commandTimeout"],

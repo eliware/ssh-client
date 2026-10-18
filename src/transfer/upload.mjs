@@ -1,5 +1,5 @@
 import { validateTransferOptions } from "./options/validate.mjs";
-import { invokeUpload } from "./session/invoke-upload.mjs";
+import { invokeUpload } from "./session/invoke/upload.mjs";
 import { runTransfer } from "./session.mjs";
 
 export function upload(client, config) {

@@ -44,7 +44,7 @@ test("validates host, verifier, port, timeout, and host verification policy", ()
         Client,
         100,
       ),
-    ).toThrow("port");
+    ).toThrow("TCP endpoint number");
   for (const timeout of [0, Number.NaN, Infinity, -1, "fast"])
     expect(() =>
       validateConnectionOptions(

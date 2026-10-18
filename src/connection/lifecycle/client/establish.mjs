@@ -55,11 +55,11 @@ export function establishClient(ClientClass, config, timeout) {
     };
     end = () => {
       if (!readyReceived)
-        finish(new SshError("SSH connection ended before ready", "SSH_CONNECTION"));
+        finish(new SshError("SSH connection ended before setup completed", "SSH_CONNECTION"));
     };
     close = () => {
       if (!readyReceived)
-        finish(new SshError("SSH connection closed before ready", "SSH_CONNECTION"));
+        finish(new SshError("SSH connection closed before setup completed", "SSH_CONNECTION"));
     };
     attachConnectionLifecycle(client, {
       onReady: ready,

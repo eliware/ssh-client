@@ -24,7 +24,7 @@ for (const item of results) {
 }
 ```
 
-Use `connect().exec()` for commands on a reusable connection.
+Use `connect().exec()` for commands on a long-lived connection.
 Read [connections](connections.md) for a complete example.
 
 ## Set a command limit
@@ -46,7 +46,7 @@ Set `envFallback` to match the remote shell when it is not a POSIX shell.
 Set `env` to an object with valid variable names and scalar values.
 Use strings, numbers, or Booleans as values.
 Set `envFallback` to `posix`, `powershell`, or `cmd` to add values to the command text.
-Choose a value that matches the remote shell.
+Select a value that matches the remote shell.
 Without `envFallback`, the client sends values through the SSH environment request.
 The SSH server may reject that request.
 
@@ -57,13 +57,13 @@ The `cmd` fallback rejects values with `%` or `!` characters.
 Set `maxOutput` to a positive byte count.
 The default is `1000000` bytes for each command.
 The client closes a command channel when output reaches the limit.
-Check `truncated` before you use partial output.
+Check `truncated` before you use incomplete output.
 
 ## Read command results
 
 Each result includes the command, standard output, standard error, combined output, exit code, signal, run time, and truncation flag.
-Use `stdout` and `stderr` when you need separate output.
-Use `result` when you need combined output.
+Use `stdout` and `stderr` for separate output.
+Use `result` for combined output.
 The `code` field is `null` when the server sends no exit code.
 
 Read [API errors](api.md#errors) when a call rejects.

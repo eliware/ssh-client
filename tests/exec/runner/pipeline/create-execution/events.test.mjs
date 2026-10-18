@@ -1,5 +1,8 @@
-import { expect, jest, test } from "@jest/globals";
-import { createExecutionEvents } from "../../../../src/exec/runner/pipeline/create-execution-events.mjs";
+import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
+import { createExecutionEvents } from "../../../../../src/exec/runner/pipeline/create-execution/events.mjs";
+
+beforeEach(() => jest.useFakeTimers());
+afterEach(() => jest.useRealTimers());
 
 test("maps every execution state to its connection event handlers", async () => {
   const finish = jest.fn();
@@ -18,7 +21,7 @@ test("maps every execution state to its connection event handlers", async () => 
   events.onClosed();
   expect(state.transportClosed).toBe(true);
   expect(state.closeDeferred).toBe(true);
-  await new Promise((resolve) => setImmediate(resolve));
+  await jest.runAllTimersAsync();
   expect(finish).toHaveBeenCalledWith(expect.objectContaining({ code: "SSH_CONNECTION" }));
   state.ended = true;
   events.onClosed();

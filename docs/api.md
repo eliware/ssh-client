@@ -8,7 +8,7 @@ The declarations in `src/public-api.d.ts` define the TypeScript API.
 | Function                      | Purpose                                                     |
 | ----------------------------- | ----------------------------------------------------------- |
 | `sshExec(options)`            | Open a connection, run commands, then close the connection. |
-| `connect(options)`            | Open a reusable connection.                                 |
+| `connect(options)`            | Open a long-lived connection.                               |
 | `createHostVerifier(options)` | Create a verifier for host keys and host certificates.      |
 | `loadKey(options)`            | Read a private key from the configured source.              |
 | `expandPath(path)`            | Expand a leading `~` to the home directory.                 |
@@ -24,7 +24,7 @@ Read the [connection guide](connections.md) for connection use.
 | Option           | Meaning                                                                       |
 | ---------------- | ----------------------------------------------------------------------------- |
 | `host`           | Required SSH host name or IP address.                                         |
-| `port`           | SSH port. Default: `22`.                                                      |
+| `port`           | TCP endpoint number. Default: `22`.                                           |
 | `username`       | SSH account name. Default: `USER` or `USERNAME` from the process environment. |
 | `privateKey`     | Private key text.                                                             |
 | `privateKeyPath` | Path to a private key file.                                                   |
@@ -63,21 +63,21 @@ Set `host` and at least one trusted record or CA source.
 
 `connect().exec(commands, options)` accepts command timeout, timeout, signal, cwd, env, envFallback, and pty.
 Read the [command guide](commands.md) for behavior and result fields.
-Use `connect()` for a reusable connection. It returns the handle that closes the transport.
+Use `connect()` for multiple commands on one connection. It returns the connection object.
 Do not set `keepAlive` with `sshExec`.
-That function does not return a connection handle.
+That function does not return a connection object.
 
-## Transfer options
+## File copy options
 
-| Option       | Meaning                                                      |
-| ------------ | ------------------------------------------------------------ |
-| `localPath`  | Required local file path.                                    |
-| `remotePath` | Required remote file path.                                   |
-| `mode`       | Optional upload permission mask from `0` to `0o7777`.        |
-| `timeout`    | Transfer limit in milliseconds. Default: `0`, with no limit. |
-| `signal`     | `AbortSignal` for cancellation.                              |
+| Option       | Meaning                                                       |
+| ------------ | ------------------------------------------------------------- |
+| `localPath`  | Required local file path.                                     |
+| `remotePath` | Required remote file path.                                    |
+| `mode`       | Optional upload permission bits from `0` to `0o7777`.         |
+| `timeout`    | File-copy limit in milliseconds. Default: `0`, with no limit. |
+| `signal`     | `AbortSignal` for cancellation.                               |
 
-Read the [file transfer guide](transfers.md) for examples.
+Read the [file copy guide](transfers.md) for examples.
 
 ## Shell options
 
@@ -91,7 +91,7 @@ Read the [file transfer guide](transfers.md) for examples.
 | `cols`    | Positive pseudo-terminal column count.                          |
 | `rows`    | Positive pseudo-terminal row count.                             |
 
-Read the [shell guide](shell.md) for input, output, and completion.
+Read the [shell guide](shell.md) for input, output, and end status.
 
 ## Results
 
@@ -118,6 +118,6 @@ Each error has a `code`, a `cause`, and a `context` object.
 | `SSH_EXEC`            | Command setup or execution failed.                   |
 | `SSH_SHELL`           | Shell setup or stream use failed.                    |
 | `SSH_SFTP`            | SFTP setup or cleanup failed.                        |
-| `SSH_TRANSFER`        | A file transfer failed.                              |
+| `SSH_TRANSFER`        | A file copy failed.                                  |
 
-Read [troubleshooting](troubleshooting.md) for next steps.
+Read [troubleshooting](troubleshooting.md) after an error.

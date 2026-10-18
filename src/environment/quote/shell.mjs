@@ -1,5 +1,5 @@
-import { quotePosix } from "./quote-posix.mjs";
-import { quotePowerShell } from "./quote-powershell.mjs";
+import { quotePosix } from "./posix.mjs";
+import { quotePowerShell } from "./powershell.mjs";
 
 export function quoteShell(value, mode = "posix") {
   if (mode === "powershell") return quotePowerShell(value);

@@ -2,7 +2,7 @@
 
 ## @eliware/ssh-client [![npm](https://img.shields.io/npm/v/@eliware/ssh-client)](https://www.npmjs.com/package/@eliware/ssh-client) [![License](https://img.shields.io/github/license/eliware/ssh-client)](https://github.com/eliware/ssh-client/blob/main/LICENSE) [![CI](https://github.com/eliware/ssh-client/actions/workflows/ci.yaml/badge.svg)](https://github.com/eliware/ssh-client/actions/workflows/ci.yaml)
 
-An ESM-first Node.js SSH client with secure host verification, reusable connections, command execution, interactive shells, and SFTP transfers.
+An ESM-first Node.js SSH client with host-key checks, long-lived connections, command execution, interactive shells, and SFTP transfers.
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@ An ESM-first Node.js SSH client with secure host verification, reusable connecti
 ## Features
 
 - Run one or more commands through SSH.
-- Reuse a connection for commands, shells, and file transfers.
+- Keep one connection for commands, shells, and file transfers.
 - Verify host keys and OpenSSH host certificates.
 - Use a private key, password, or SSH agent.
 - Set time limits and cancellation signals.
@@ -44,7 +44,7 @@ Read the [installation and connection guide](docs/usage.md) before first use.
 ## Usage
 
 Import `sshExec` to run commands.
-Read the [user guide](docs/README.md) for shell, transfer, and connection examples.
+Read the [user guide](docs/README.md) for shell, file-copy, and connection examples.
 Read [RELEASE_NOTES.md](RELEASE_NOTES.md) for release history.
 
 ## Development
@@ -62,7 +62,7 @@ Read the [troubleshooting guide](docs/troubleshooting.md) when an operation fail
 
 ## Security
 
-Read the [security guide](docs/security.md) before you set host verification or authentication options.
+Read the [host trust guide](docs/security.md) before you set host verification or authentication options.
 
 ## API
 

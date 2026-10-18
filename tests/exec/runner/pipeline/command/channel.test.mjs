@@ -1,8 +1,14 @@
-import { expect, jest, test } from "@jest/globals";
+import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import {
   attachCommandChannel,
   commandInvocationError,
-} from "../../../../src/exec/runner/pipeline/command-channel.mjs";
+} from "../../../../../src/exec/runner/pipeline/command/channel.mjs";
+
+beforeEach(() => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date("2026-10-17T12:00:00.000Z"));
+});
+afterEach(() => jest.useRealTimers());
 
 test("normalizes command invocation errors", () => {
   expect(commandInvocationError(Error("channel"))).toMatchObject({ code: "SSH_EXEC" });
@@ -94,7 +100,7 @@ test("completes a channel that was closed before event attachment", async () => 
     },
     next,
   });
-  await new Promise((resolve) => setImmediate(resolve));
+  await jest.runAllTimersAsync();
   expect(context.results).toHaveLength(1);
   expect(context.results[0].stdout).toBe("out");
   expect(next).toHaveBeenCalledTimes(1);

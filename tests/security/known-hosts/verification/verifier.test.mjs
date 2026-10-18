@@ -1,5 +1,11 @@
-import { expect, test, jest } from "@jest/globals";
+import { afterEach, beforeEach, expect, test, jest } from "@jest/globals";
 import { createHostVerifier } from "../../../../src/security/known-hosts/verification/verifier.mjs";
+
+beforeEach(() => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date("2026-10-17T12:00:00.000Z"));
+});
+afterEach(() => jest.useRealTimers());
 
 function createUtils() {
   return {
@@ -113,7 +119,7 @@ test("reports invalid host records through the callback", async () => {
     },
   });
   expect(verify("key", callback)).toBeUndefined();
-  await new Promise((resolve) => setImmediate(resolve));
+  await jest.runAllTimersAsync();
   expect(callback).toHaveBeenCalledWith(false);
 });
 

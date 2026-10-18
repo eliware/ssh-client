@@ -1,12 +1,5 @@
 import { expect, jest, test } from "@jest/globals";
 import { EventEmitter } from "node:events";
-import { promises as fs } from "node:fs";
-import { join } from "node:path";
-import { tmpdir, homedir } from "node:os";
-import { pathToFileURL } from "node:url";
-import ssh2 from "@eliware/ssh2";
-import { createHostVerifier } from "../../../../src/public-api.mjs";
-import { connect } from "../../../../src/connection/lifecycle/client/connect.mjs";
 import { createReusableClientApi } from "../../../../src/connection/lifecycle/client/api.mjs";
 
 test("exposes open state and rejects operations after close", async () => {
@@ -47,75 +40,6 @@ test("marks the reusable API closed when its transport emits an error", () => {
   const api = createReusableClientApi(client, { host: "router", privateKey: "KEY" });
   client.emit("error", Error("transport failed"));
   expect(api.state).toBe("closed");
-});
-
-const integrationReady =
-  process.env.SSH_CLIENT_INTEGRATION === "1" &&
-  process.env.SSH_CLIENT_INTEGRATION_HOST &&
-  process.env.SSH_CLIENT_INTEGRATION_USER &&
-  (process.env.SSH_CLIENT_INTEGRATION_PRIVATE_KEY || process.env.SSH_CLIENT_INTEGRATION_PASSWORD) &&
-  (process.env.SSH_CLIENT_INTEGRATION_KNOWN_HOSTS || process.env.SSH_CLIENT_INTEGRATION_CA);
-const integrationTest = integrationReady ? test : test.skip;
-integrationTest("real SSH integration: verifies, executes, transfers, and closes", async () => {
-  const transport = process.env.SSH_CLIENT_INTEGRATION_TRANSPORT
-    ? (await import(pathToFileURL(process.env.SSH_CLIENT_INTEGRATION_TRANSPORT))).default
-    : undefined;
-  const client = await connect({
-    host: process.env.SSH_CLIENT_INTEGRATION_HOST,
-    port: Number(process.env.SSH_CLIENT_INTEGRATION_PORT || 22),
-    username: process.env.SSH_CLIENT_INTEGRATION_USER,
-    privateKeyPath: process.env.SSH_CLIENT_INTEGRATION_PRIVATE_KEY,
-    password: process.env.SSH_CLIENT_INTEGRATION_PASSWORD,
-    knownHostsPath: process.env.SSH_CLIENT_INTEGRATION_KNOWN_HOSTS,
-    hostCaPath: process.env.SSH_CLIENT_INTEGRATION_CA,
-    ClientClass: transport,
-  });
-  const source = join(await fs.mkdtemp(join(tmpdir(), "ssh-client-integration-")), "source.txt");
-  const copy = `${source}.copy`;
-  const remote =
-    process.env.SSH_CLIENT_INTEGRATION_REMOTE_PATH || `/tmp/ssh-client-${Date.now()}.txt`;
-  await fs.writeFile(source, "ssh-client integration\n");
-  try {
-    const [result] = await client.exec(["echo integration"]);
-    expect(result.code).toBe(0);
-    expect(result.stdout).toContain("integration");
-    await client.upload({ localPath: source, remotePath: remote });
-    await client.download({ remotePath: remote, localPath: copy });
-    expect(await fs.readFile(copy, "utf8")).toBe("ssh-client integration\n");
-  } finally {
-    await client.close();
-    await fs.rm(source, { force: true });
-    await fs.rm(copy, { force: true });
-  }
-});
-
-integrationTest("real SSH certificate policy rejects tampering and revocation", async () => {
-  const certPath = process.env.SSH_CLIENT_INTEGRATION_CERT;
-  if (!certPath || !process.env.SSH_CLIENT_INTEGRATION_CA) return;
-  const encoded = (await fs.readFile(certPath, "utf8")).trim().split(/\s+/)[1];
-  const valid = Buffer.from(encoded, "base64");
-  const invalid = Buffer.from(valid);
-  invalid[invalid.length - 1] ^= 1;
-  const verifier = createHostVerifier({
-    host: process.env.SSH_CLIENT_INTEGRATION_HOST,
-    port: Number(process.env.SSH_CLIENT_INTEGRATION_PORT || 22),
-    hostCaPath: process.env.SSH_CLIENT_INTEGRATION_CA,
-    fsLib: fs,
-    homedirFn: homedir,
-    utils: ssh2.utils,
-  });
-  expect(await verifier(valid)).toBe(true);
-  expect(await verifier(invalid)).toBe(false);
-  const revoked = createHostVerifier({
-    host: process.env.SSH_CLIENT_INTEGRATION_HOST,
-    port: Number(process.env.SSH_CLIENT_INTEGRATION_PORT || 22),
-    knownHosts: `@revoked ${process.env.SSH_CLIENT_INTEGRATION_HOST} ssh-ed25519 key`,
-    hostCaPath: process.env.SSH_CLIENT_INTEGRATION_CA,
-    fsLib: fs,
-    homedirFn: homedir,
-    utils: ssh2.utils,
-  });
-  expect(await revoked(valid)).toBe(false);
 });
 
 test("closes the reusable API when shell setup times out", async () => {

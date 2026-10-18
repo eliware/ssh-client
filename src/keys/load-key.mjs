@@ -14,7 +14,7 @@ export async function loadKey({
   const key = await readKeyFile(selectKeySources({ privateKeyPath, homedirFn }), fsLib);
   if (key !== undefined) return key;
   throw new SshError(
-    "No private key found in ~/.ssh/; provide privateKey or privateKeyPath.",
+    "No private key was found in ~/.ssh/. Set privateKey or privateKeyPath.",
     "SSH_KEY_NOT_FOUND",
   );
 }

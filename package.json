@@ -1,8 +1,8 @@
 {
   "name": "@eliware/ssh-client",
-  "version": "12.0.0",
+  "version": "13.0.0",
   "type": "module",
-  "description": "An ESM-first Node.js SSH client with secure host verification, reusable connections, command execution, interactive shells, and SFTP transfers.",
+  "description": "An ESM-first Node.js SSH client with host-key checks, long-lived connections, command execution, interactive shells, and SFTP transfers.",
   "keywords": [
     "ssh",
     "ssh-client",

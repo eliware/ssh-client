@@ -1,5 +1,5 @@
 import { renderEnvironment } from "../../../environment/render-environment.mjs";
-import { quoteShell } from "../../../environment/quote-shell.mjs";
+import { quoteShell } from "../../../environment/quote/shell.mjs";
 
 export function buildCommand(command, { cwd, env, envFallback }) {
   const separator = envFallback === "powershell" ? "; " : " && ";
