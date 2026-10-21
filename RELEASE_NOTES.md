@@ -4,27 +4,27 @@
 
 ### Added
 
-- Add injectable structured logging with operation details and sensitive-value protection.
-- Add an opt-in integration example for SSH commands, SFTP file copies, and host certificates.
-- Add end-user guides for installation, environment variables, APIs, connections, authentication,
-  host verification, commands, shells, file copies, and errors.
+- Add an optional structured logger for SSH operations and command results.
+- Add an opt-in integration example for commands, file copies, and host certificates.
+- Add end-user guides for setup, authentication, host trust, commands, shells, file copies, and errors.
 
 ### Changed
 
-- Set the package version to 15.0.0 and update `@eliware/log` and `@eliware/test` to 15.0.0.
-- Align package metadata, specifications, validation, CI, npm publication, and Knit deployment
-  with Eliware Test 15.0.
-- Organize connection, execution, key, host-record, logging, shell, and file-copy code into focused
-  modules with matching tests.
-- Replace the previous publication workflow with the canonical npm workflow.
-- Update examples, API declarations, and documentation for current package behavior.
+- Set the package version and Eliware logging and test dependencies to 15.0.0.
+- Align package metadata, specifications, validation, CI, npm publication, and Knit deployment with Eliware Test 15.
+- Split connection, command, key, host trust, logging, shell, and file copy code into focused modules with matching tests.
+- Use the canonical npm publication workflow and remove the previous publication workflow.
+- Update examples, API declarations, and user guides for current behavior.
+- Keep internal execution options out of the public TypeScript API and align helper types with runtime results.
 
 ### Fixed
 
-- Clean up connections and streams after commands end, errors, timeouts, and cancellation.
-- Validate upload modes, known-host records, host certificates, and command output at focused
-  module boundaries.
-- Correct validation messages and examples to match current behavior.
+- Close connections and streams after commands run, errors occur, time limits expire, or cancellation occurs.
+- Retry a failed connection close and accept readiness events during setup.
+- Validate plain known-host keys, host certificates, upload modes, and command output.
+- Reject host certificate extensions that the client does not apply.
+- Wait for asynchronous SFTP cleanup and report cleanup failures.
+- Correct validation messages, integration requirements, and examples.
 
 ## 12.0.0 — 2026-10-12
 
