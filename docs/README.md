@@ -3,6 +3,7 @@
 Use these guides to install the package and call its public API.
 
 - [Install and run a command](usage.md)
+- [Environment variables](environment.md)
 - [API and options](api.md)
 - [Connections and authentication](connections.md)
 - [Run commands](commands.md)

@@ -52,8 +52,8 @@ Read [authentication and connections](connections.md) and [host verification](se
 
 ## Logging
 
-Install `@eliware/log` if you want its structured logger.
-Create a logger with `createLogger()` and pass it as the `logger` option.
+Import `createLogger()` from `@eliware/log`, which this package installs as a dependency.
+Pass the logger as the `logger` option.
 Pass the option to `connect()`, `sshExec()`, `upload()`, or `download()`.
 The connection uses the same logger for `exec()`, `shell()`, `upload()`, and `download()`.
 
@@ -89,6 +89,7 @@ Call `loadKey()` to read key text from `privateKey` or a key file.
 When you omit both values, it checks `SSH_PRIVATE_KEY_PATH`, `~/.ssh/id_ed25519`, and `~/.ssh/id_rsa` in order.
 It returns the first readable key file.
 Call `expandPath()` to expand a leading `~` to the user home directory.
+Read the [environment variable guide](environment.md) for key and username fallback details.
 
 ```js
 import { expandPath, loadKey } from "@eliware/ssh-client";

@@ -2,7 +2,7 @@
 
 ## Project
 
-Maintain `@eliware/ssh-client` as a Node.js 26 or later library with native ESM.
+Maintain Eliware's `@eliware/ssh-client` as a Node.js 26 or later library with native ESM.
 
 ## Scope and boundaries
 

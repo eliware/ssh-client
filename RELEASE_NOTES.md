@@ -1,17 +1,30 @@
 # Release Notes
 
-## 14.0.0 — 2026-10-21
+## 15.0.0 — 2026-10-21
+
+### Added
+
+- Add injectable structured logging with operation details and sensitive-value protection.
+- Add an opt-in integration example for SSH commands, SFTP file copies, and host certificates.
+- Add end-user guides for installation, environment variables, APIs, connections, authentication,
+  host verification, commands, shells, file copies, and errors.
 
 ### Changed
 
-- Set package metadata to version 14.0.0 and update the shared test package to 14.0.0.
-- Group related source modules and tests in matching folders.
-- Align validation and workflow files with Eliware Test 14 conventions.
-- Add an opt-in integration example for SSH connections and SFTP transfers.
-- Add injectable structured logging with operation context and sensitive-value protection.
-- Document terminal options, host verification, authentication, commands, shells, file transfers, and errors.
-- Add the npm release workflow and update the Knit deployment commands.
-- Fix wording, validation messages, and test setup to follow shared language and test rules.
+- Set the package version to 15.0.0 and update `@eliware/log` and `@eliware/test` to 15.0.0.
+- Align package metadata, specifications, validation, CI, npm publication, and Knit deployment
+  with Eliware Test 15.0.
+- Organize connection, execution, key, host-record, logging, shell, and file-copy code into focused
+  modules with matching tests.
+- Replace the previous publication workflow with the canonical npm workflow.
+- Update examples, API declarations, and documentation for current package behavior.
+
+### Fixed
+
+- Clean up connections and streams after commands end, errors, timeouts, and cancellation.
+- Validate upload modes, known-host records, host certificates, and command output at focused
+  module boundaries.
+- Correct validation messages and examples to match current behavior.
 
 ## 12.0.0 — 2026-10-12
 
