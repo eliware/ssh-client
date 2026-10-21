@@ -17,6 +17,7 @@ test("exposes open state and rejects operations after close", async () => {
   expect(typeof api.download).toBe("function");
   expect(typeof api.close).toBe("function");
   await expect(api.close()).resolves.toBeUndefined();
+  await expect(api.close()).resolves.toBeUndefined();
   await expect(api.exec([])).rejects.toMatchObject({ code: "SSH_CONNECTION" });
   await expect(api.shell()).rejects.toMatchObject({ code: "SSH_CONNECTION" });
   await expect(api.upload({ localPath: "a", remotePath: "b" })).rejects.toMatchObject({

@@ -1,9 +1,4 @@
-export function claimTransferSettlement(state) {
-  if (state.settled) return false;
-  state.settled = true;
-  return true;
-}
-
+import { claimTransferSettlement } from "./state.mjs";
 import { SshError } from "../../errors.mjs";
 
 export function settleTransfer({

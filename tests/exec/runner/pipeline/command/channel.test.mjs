@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
-import {
-  attachCommandChannel,
-  commandInvocationError,
-} from "../../../../../src/exec/runner/pipeline/command/channel.mjs";
+import { attachCommandChannel } from "../../../../../src/exec/runner/pipeline/command/channel.mjs";
+import { commandInvocationError } from "../../../../../src/exec/runner/pipeline/command/errors.mjs";
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -103,5 +101,46 @@ test("completes a channel that was closed before event attachment", async () => 
   await jest.runAllTimersAsync();
   expect(context.results).toHaveLength(1);
   expect(context.results[0].stdout).toBe("out");
+  expect(next).toHaveBeenCalledTimes(1);
+});
+
+test("completes a channel that reports closed before event attachment", async () => {
+  const output = { stdout: "out", stderr: "", merged: "out", truncated: false };
+  const context = {
+    maxOutput: 100,
+    results: [],
+    setCommandStarting() {},
+    clearActiveTimer() {},
+    finish: () => {
+      throw Error("unexpected");
+    },
+  };
+  let completed = false;
+  const next = jest.fn();
+  attachCommandChannel({
+    stream: {
+      closed: true,
+      on() {
+        return this;
+      },
+      stderr: {
+        on() {
+          return this;
+        },
+      },
+    },
+    output,
+    context,
+    command: "echo",
+    started: Date.now(),
+    commandTimer: undefined,
+    isCompleted: () => completed,
+    markCompleted: () => {
+      completed = true;
+    },
+    next,
+  });
+  await jest.runAllTimersAsync();
+  expect(context.results).toHaveLength(1);
   expect(next).toHaveBeenCalledTimes(1);
 });

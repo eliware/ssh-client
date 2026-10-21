@@ -4,7 +4,12 @@ import { expandHomePath as expandPathImpl } from "./paths/expand-home-path.mjs";
 import { createHostVerifier as createHostVerifierImpl } from "./security/known-hosts/verification/verifier.mjs";
 import { sshExec as sshExecImpl } from "./exec/runner/pipeline/execute.mjs";
 import { connect as connectImpl } from "./connection/lifecycle/client/connect.mjs";
-import { logCommandResults, operationMetadata, runLoggedOperation } from "./logging/operation.mjs";
+import {
+  execOperationMetadata,
+  logCommandResults,
+  operationMetadata,
+  runLoggedOperation,
+} from "./logging/operation.mjs";
 import { singleTransfer } from "./operations/single-transfer.mjs";
 
 export const SshError = SshErrorImpl;
@@ -13,8 +18,7 @@ export const expandPath = expandPathImpl;
 export const createHostVerifier = createHostVerifierImpl;
 export function sshExec(options = {}) {
   const logger = options?.logger;
-  const details = Array.isArray(options?.commands) ? { commandCount: options.commands.length } : {};
-  const metadata = operationMetadata("exec", options, details);
+  const metadata = execOperationMetadata(options);
   return runLoggedOperation(
     logger,
     metadata,

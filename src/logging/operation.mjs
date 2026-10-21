@@ -7,6 +7,11 @@ export function operationMetadata(operation, options = {}, details = {}) {
   };
 }
 
+export function execOperationMetadata(options = {}) {
+  const details = Array.isArray(options?.commands) ? { commandCount: options.commands.length } : {};
+  return operationMetadata("exec", options, details);
+}
+
 export function logRecord(logger, level, message, metadata) {
   const write = logger?.[level];
   if (typeof write !== "function") return;

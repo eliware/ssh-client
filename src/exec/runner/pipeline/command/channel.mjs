@@ -1,6 +1,6 @@
 import { attachChannel } from "../../../commands/channel.mjs";
 import { handleCommandClose } from "./close.mjs";
-import { handleCommandError, handleStderrError, commandInvocationError } from "./errors.mjs";
+import { handleCommandError, handleStderrError } from "./errors.mjs";
 
 export function attachCommandChannel({
   stream,
@@ -38,5 +38,3 @@ export function attachCommandChannel({
   if (stream.destroyed || stream.closed) onClose(state.exitCode, state.exitSignal);
   return state;
 }
-
-export { commandInvocationError };

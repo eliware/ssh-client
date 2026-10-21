@@ -2,6 +2,7 @@ import { expect, jest, test } from "@jest/globals";
 import {
   logCommandResults,
   logRecord,
+  execOperationMetadata,
   operationMetadata,
   runLoggedOperation,
 } from "../../src/logging/operation.mjs";
@@ -17,6 +18,17 @@ test("builds safe operation metadata with default and supplied connection detail
     port: 2200,
     commandCount: 2,
   });
+});
+
+test("builds execution metadata with a command count when commands are an array", () => {
+  expect(execOperationMetadata({ host: "router", commands: ["one", "two"] })).toEqual({
+    operation: "exec",
+    host: "router",
+    port: 22,
+    commandCount: 2,
+  });
+  expect(execOperationMetadata({ commands: "one" })).toEqual({ operation: "exec", port: 22 });
+  expect(execOperationMetadata()).toEqual({ operation: "exec", port: 22 });
 });
 
 test("writes structured records and skips missing or failing logger methods", () => {

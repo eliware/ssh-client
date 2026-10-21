@@ -67,3 +67,23 @@ test("closes late streams after a command timeout", () => {
     jest.useRealTimers();
   }
 });
+
+test("clears the command timer after the command channel closes", async () => {
+  const context = makeContext({ results: [], maxOutput: 100 });
+  const listeners = new Map();
+  const callback = createCommandCallback({
+    context,
+    command: "run",
+    output: { stdout: "", stderr: "", merged: "", truncated: false },
+    started: 0,
+    next: jest.fn(),
+  });
+  callback.done(null, {
+    on: (event, handler) => listeners.set(event, handler),
+    stderr: { on: () => {} },
+  });
+  listeners.get("close")(0);
+  await Promise.resolve();
+  callback.finishInvocation();
+  expect(context.clearActiveTimer).toHaveBeenCalledTimes(1);
+});

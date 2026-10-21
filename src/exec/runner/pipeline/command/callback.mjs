@@ -1,6 +1,6 @@
-import { SshError } from "../../../../errors.mjs";
 import { startCommandTimeout } from "../../../commands/timeout.mjs";
-import { attachCommandChannel, commandInvocationError } from "./channel.mjs";
+import { attachCommandChannel } from "./channel.mjs";
+import { commandInvocationError } from "./errors.mjs";
 
 export function createCommandCallback({
   context,
@@ -54,7 +54,7 @@ export function createCommandCallback({
     },
     fail(error) {
       clearTimeout(commandTimer);
-      context.finish(new SshError(`SSH exec error: ${error.message}`, "SSH_EXEC", error));
+      context.finish(commandInvocationError(error));
     },
   };
 }

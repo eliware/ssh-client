@@ -1,38 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { createReusableClientAdapter } from "../../../src/connection/adapter/reusable.mjs";
 import { connect } from "../../../src/connection/lifecycle/client/connect.mjs";
-test("adapts transport event and operation methods", () => {
-  const calls = [];
-  const client = {
-    on: (...args) => calls.push(["on", args]),
-    removeListener: (...args) => calls.push(["remove", args]),
-    once: (...args) => calls.push(["once", args]),
-    emit: (...args) => calls.push(["emit", args]),
-    end: () => calls.push(["end"]),
-    destroy: () => calls.push(["destroy"]),
-    exec: (...args) => calls.push(["exec", args]),
-    sftp: (...args) => calls.push(["sftp", args]),
-  };
-  const adapter = createReusableClientAdapter(client);
-  expect(adapter.on("a", 1)).toBe(adapter);
-  expect(adapter.removeListener("a", 1)).toBe(adapter);
-  expect(adapter.once("a", 1)).toBe(adapter);
-  expect(adapter.emit("a", 1)).toBe(adapter);
-  adapter.end();
-  adapter.destroy();
-  adapter.exec("x");
-  adapter.sftp("x");
-  expect(calls.map((call) => call[0])).toEqual([
-    "on",
-    "remove",
-    "once",
-    "emit",
-    "end",
-    "destroy",
-    "exec",
-    "sftp",
-  ]);
-});
 
 test("exercises reusable transport adapters and shell completion", async () => {
   class FullClient {

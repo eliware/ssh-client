@@ -30,31 +30,6 @@ test("ignores a close event after the first close event", async () => {
   expect(states).toEqual(["closing", "closed"]);
 });
 
-test("close resolves when the transport throws synchronously", async () => {
-  class ClosingClient {
-    once(event, fn) {
-      if (event === "ready") queueMicrotask(fn);
-      return this;
-    }
-    connect() {}
-    end() {
-      throw new Error("already closed");
-    }
-    destroy() {}
-  }
-  const client = await connect({ host: "router", privateKey: "KEY", ClientClass: ClosingClient });
-  await expect(client.close()).resolves.toBeUndefined();
-  await expect(client.close()).resolves.toBeUndefined();
-  await expect(client.exec([])).rejects.toMatchObject({ code: "SSH_CONNECTION" });
-  await expect(client.shell()).rejects.toMatchObject({ code: "SSH_CONNECTION" });
-  await expect(client.upload({ localPath: "a", remotePath: "b" })).rejects.toMatchObject({
-    code: "SSH_CONNECTION",
-  });
-  await expect(client.download({ remotePath: "a", localPath: "b" })).rejects.toMatchObject({
-    code: "SSH_CONNECTION",
-  });
-});
-
 test("rejects close when the transport emits a shutdown error", async () => {
   class ErrorOnClose {
     once(event, fn) {
