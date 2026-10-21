@@ -86,19 +86,24 @@ test("settles close when the transport emits end only", async () => {
   await expect(client.close()).resolves.toBeUndefined();
 });
 
-test("keeps a failed close result stable when close runs again", async () => {
+test("retries close after a failed attempt", async () => {
   const listeners = new Map();
+  let attempts = 0;
   const client = {
     once: (event, callback) => listeners.set(event, callback),
     removeListener: jest.fn(),
-    end: jest.fn(() => listeners.get("error")(Error("shutdown"))),
+    end: jest.fn(() => {
+      attempts += 1;
+      if (attempts === 1) listeners.get("error")(Error("shutdown"));
+      else listeners.get("close")();
+    }),
   };
   const api = createReusableClientApi(client, { host: "router", privateKey: "KEY" });
   const first = api.close();
   const firstError = await first.catch((error) => error);
   expect(firstError).toMatchObject({ code: "SSH_CONNECTION" });
   expect(api.state).toBe("closed");
-  await expect(api.close()).rejects.toBe(firstError);
+  await expect(api.close()).resolves.toBeUndefined();
   expect(api.state).toBe("closed");
-  expect(client.end).toHaveBeenCalledTimes(1);
+  expect(client.end).toHaveBeenCalledTimes(2);
 });

@@ -8,7 +8,10 @@ export function createReusableClientApi(client, options) {
   const state = observeReusableClientState(client);
   const close = () => {
     if (closePromise) return closePromise;
-    closePromise = closeConnection(client, (value) => state.set(value));
+    closePromise = closeConnection(client, (value) => state.set(value)).catch((error) => {
+      closePromise = undefined;
+      throw error;
+    });
     return closePromise;
   };
   const operations = createReusableOperations({
