@@ -9,6 +9,7 @@ export function startClientEstablishment(client, config, timeout) {
   return new Promise((resolve, reject) => {
     let settled = false;
     let connecting = false;
+    let connectionStarted = false;
     let readyReceived = false;
     let timer;
     let ready;
@@ -32,7 +33,7 @@ export function startClientEstablishment(client, config, timeout) {
     };
     ready = () => {
       readyReceived = true;
-      if (!connecting) finish();
+      if (connectionStarted && !connecting) finish();
     };
     error = (cause) => {
       if (!readyReceived)
@@ -54,8 +55,7 @@ export function startClientEstablishment(client, config, timeout) {
       onEnd: end,
       onClose: close,
     });
-    if (settled || readyReceived) {
-      finish();
+    if (settled) {
       detach();
       return;
     }
@@ -64,6 +64,7 @@ export function startClientEstablishment(client, config, timeout) {
       stopClient(client);
     });
     try {
+      connectionStarted = true;
       connecting = true;
       client.connect(config);
       connecting = false;

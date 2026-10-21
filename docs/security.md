@@ -32,7 +32,7 @@ Trust a certificate only when a trusted CA signed it.
 Match its host identity to the host name or `[host]:<number>` value.
 
 Check that its valid period includes the current time.
-The client rejects certificates with unsupported options because it does not apply them.
+The client rejects certificates with unsupported options or extensions because it does not apply them.
 The client supports Ed25519, RSA SHA-2, and ECDSA certificate signatures.
 
 ## Use a custom verifier

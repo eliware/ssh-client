@@ -106,10 +106,13 @@ test("rejects critical options and malformed extension data", () => {
   ).toThrow("truncated");
 });
 
-test("parses valid extensions and ignores the reserved field", () => {
+test("rejects unsupported extensions and ignores the reserved field", () => {
   const type = "ssh-ed25519-cert-v01@openssh.com";
   const extensions = Buffer.concat([string("permit-pty"), string("")]);
-  expect(
+  expect(() =>
     parseCertificate(certificate(type, ["key"], { extensions, reserved: "reserved" })),
-  ).toMatchObject({ base: "ssh-ed25519" });
+  ).toThrow("unsupported host certificate extensions");
+  expect(parseCertificate(certificate(type, ["key"], { reserved: "reserved" }))).toMatchObject({
+    base: "ssh-ed25519",
+  });
 });

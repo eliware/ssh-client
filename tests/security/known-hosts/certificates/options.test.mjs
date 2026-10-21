@@ -8,15 +8,18 @@ const string = (value) => {
   return Buffer.concat([length, bytes]);
 };
 
-test("accepts empty critical options and valid extensions", () => {
-  const extensions = Buffer.concat([string("permit-pty"), string("")]);
-  expect(() => validateCertificateOptions(Buffer.alloc(0), extensions)).not.toThrow();
+test("accepts empty critical options and extensions", () => {
+  expect(() => validateCertificateOptions(Buffer.alloc(0), Buffer.alloc(0))).not.toThrow();
 });
 
-test("rejects critical options and duplicate names", () => {
+test("rejects unsupported critical options and extensions", () => {
+  const extensions = Buffer.concat([string("permit-pty"), string("")]);
   const option = Buffer.concat([string("force-command"), string("command")]);
   expect(() => validateCertificateOptions(option, Buffer.alloc(0))).toThrow(
     "unsupported host certificate options",
+  );
+  expect(() => validateCertificateOptions(Buffer.alloc(0), extensions)).toThrow(
+    "unsupported host certificate extensions",
   );
   expect(() =>
     validateCertificateOptions(Buffer.alloc(0), Buffer.concat([option, option])),

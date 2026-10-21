@@ -62,7 +62,7 @@ test("ignores synchronous end and close events after ready", async () => {
   await expect(startClientEstablishment(client, {}, 100)).resolves.toBe(client);
 });
 
-test("does not start a timeout when ready fires during listener setup", async () => {
+test("connects when ready fires during listener setup", async () => {
   jest.useFakeTimers();
   try {
     class ReadyDuringSetupClient extends EventClient {
@@ -77,12 +77,33 @@ test("does not start a timeout when ready fires during listener setup", async ()
     const client = new ReadyDuringSetupClient();
     await expect(startClientEstablishment(client, {}, 100)).resolves.toBe(client);
     jest.advanceTimersByTime(100);
-    expect(client.connect).not.toHaveBeenCalled();
+    expect(client.connect).toHaveBeenCalledTimes(1);
     expect(client.end).not.toHaveBeenCalled();
     expect(client.handlers.size).toBe(0);
   } finally {
     jest.useRealTimers();
   }
+});
+
+test("rejects when a transport error fires during listener setup", async () => {
+  class ErrorDuringSetupClient extends EventClient {
+    connect = jest.fn();
+    on(event, callback) {
+      super.on(event, callback);
+      if (event === "error") callback(Error("setup failed"));
+      return this;
+    }
+    once(event, callback) {
+      super.once(event, callback);
+      if (event === "end") callback();
+      return this;
+    }
+  }
+  const client = new ErrorDuringSetupClient();
+  await expect(startClientEstablishment(client, {}, 100)).rejects.toMatchObject({
+    code: "SSH_CONNECTION",
+  });
+  expect(client.connect).not.toHaveBeenCalled();
 });
 
 test("starts the transport before a queued ready event resolves", async () => {
