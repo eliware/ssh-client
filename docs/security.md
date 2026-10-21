@@ -5,6 +5,7 @@
 Set `knownHosts`, `knownHostsPath`, `hostCaPath`, or `hostVerifier`.
 The default SSH client rejects a connection without a host verification option.
 Do not accept a host key from an untrusted source.
+Set one verification option for each connection that uses the default SSH client.
 
 ## Use known-host records
 
@@ -39,7 +40,8 @@ The client supports Ed25519, RSA SHA-2, and ECDSA certificate signatures.
 Pass `hostVerifier` when your application must apply its own trust rules.
 Return `true` only when the presented key matches trusted data.
 Return `false` when the key does not match trusted data.
-The verifier may also call its callback or return a promise.
+The verifier may return a Boolean or a promise that resolves to a Boolean.
+The verifier may call its callback with the result.
 
 ```js
 const hostVerifier = (key) => trustedKeyBytes.equals(key);

@@ -19,7 +19,8 @@ Read [host verification](security.md) for supported records.
 Confirm that the key path exists and that the key is readable.
 Pass `passphrase` when the key requires one.
 Confirm that the username and password match the SSH account.
-Confirm that `SSH_AUTH_SOCK` points to an active agent when you use `agent`.
+Confirm that `agent` points to an active agent socket.
+On systems that set `SSH_AUTH_SOCK`, pass its value as `agent`.
 
 ## Check a timeout
 

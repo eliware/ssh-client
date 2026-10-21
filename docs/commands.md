@@ -31,7 +31,7 @@ Read [connections](connections.md) for a complete example.
 
 Set `commandTimeout` in milliseconds.
 The default is `0`, which sets no command time limit.
-The `timeout` option is an alias for `commandTimeout` in `sshExec()`.
+The `timeout` option is an alias for `commandTimeout` in `sshExec()` and `connect().exec()`.
 Use `signal` to cancel before a command ends.
 
 ## Set the remote directory
@@ -54,8 +54,9 @@ The `cmd` fallback rejects values with `%` or `!` characters.
 
 ## Limit output
 
-Set `maxOutput` to a positive byte count.
+Set `maxOutput` to a positive byte count when you call `sshExec()`.
 The default is `1000000` bytes for each command.
+The client stores no more than this many combined output bytes for each command.
 The client closes a command channel when output reaches the limit.
 Check `truncated` before you use incomplete output.
 
@@ -63,7 +64,7 @@ Check `truncated` before you use incomplete output.
 
 Each result includes the command, standard output, standard error, combined output, exit code, signal, run time, and truncation flag.
 Use `stdout` and `stderr` for separate output.
-Use `result` for combined output.
+Use `result` for combined output in the order that the client receives it.
 The `code` field is `null` when the server sends no exit code.
 
 Read [API errors](api.md#errors) when a call rejects.

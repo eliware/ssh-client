@@ -38,6 +38,7 @@ Pass an `AbortSignal` to cancel shell setup.
 The shell session is a Node.js read-write stream.
 Call `shell.close()` to close the shell session.
 Read `shell.completion` to receive the exit code and signal when the shell ends.
+The promise rejects when the shell stream reports an error.
 Call `ssh.close()` when all work on the connection ends.
 
 Read [connection guidance](connections.md) before you open a shell.

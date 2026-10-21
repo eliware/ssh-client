@@ -21,6 +21,12 @@ Read the [connection guide](connections.md) for connection use.
 
 ## Connection options
 
+Pass connection options to `connect()`, `sshExec()`, `upload()`, and `download()`.
+Standalone file-copy calls combine connection options with file-copy settings.
+Set `host` to a host name or IP address.
+The client uses port `22` when you omit `port`.
+The client uses `USER` or `USERNAME` when you omit `username`.
+
 | Option           | Meaning                                                                       |
 | ---------------- | ----------------------------------------------------------------------------- |
 | `host`           | Required SSH host name or IP address.                                         |
@@ -77,6 +83,20 @@ Do not put sensitive values in custom logger metadata.
 `createHostVerifier()` accepts `host`, `port`, `knownHosts`, `knownHostsPath`, and `hostCaPath`.
 Set `host` and at least one trusted record or CA source.
 
+## Key and path helpers
+
+Call `loadKey()` to read key text from `privateKey` or a key file.
+When you omit both values, it checks `SSH_PRIVATE_KEY_PATH`, `~/.ssh/id_ed25519`, and `~/.ssh/id_rsa` in order.
+It returns the first readable key file.
+Call `expandPath()` to expand a leading `~` to the user home directory.
+
+```js
+import { expandPath, loadKey } from "@eliware/ssh-client";
+
+const keyPath = expandPath("~/.ssh/id_ed25519");
+const privateKey = await loadKey({ privateKeyPath: keyPath });
+```
+
 ## Command options
 
 | Option           | Meaning                                                              |
@@ -92,13 +112,16 @@ Set `host` and at least one trusted record or CA source.
 | `pty`            | Request a pseudo-terminal for a command. Default: `false`.           |
 | `keepAlive`      | Keep the SSH transport open after `sshExec`. Default: `false`.       |
 
-`connect().exec(commands, options)` accepts command timeout, timeout, signal, cwd, env, envFallback, and pty.
+`connect().exec(commands, options)` accepts `commandTimeout`, `timeout`, `signal`, `cwd`, `env`, `envFallback`, and `pty`.
 Read the [command guide](commands.md) for behavior and result fields.
 Use `connect()` for multiple commands on one connection. It returns the connection object.
 Do not set `keepAlive` with `sshExec`.
 That function does not return a connection object.
 
 ## File copy options
+
+Pass connection options and file-copy options to standalone `upload()` and `download()` calls.
+Pass only file-copy options to `ssh.upload()` and `ssh.download()` on a connection.
 
 | Option       | Meaning                                                       |
 | ------------ | ------------------------------------------------------------- |
@@ -127,7 +150,7 @@ Read the [shell guide](shell.md) for input, output, and end status.
 ## Results
 
 Each command result has `command`, `stdout`, `stderr`, `result`, `truncated`, `code`, `signal`, and `duration` fields.
-`result` contains the combined output.
+`result` contains combined output in the order that the client receives it.
 `code` is the remote exit code, or `null` when the server sends no code.
 `duration` is the command time in milliseconds.
 `truncated` is `true` when output reached `maxOutput`.

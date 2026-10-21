@@ -5,6 +5,8 @@
 Call `connect()` with host, authentication, and host verification options.
 The connection opens before `connect()` resolves.
 Call `close()` when your work ends.
+Set `username` when the account name differs from `USER` or `USERNAME` in the process environment.
+The client uses port `22` when you omit `port`.
 
 ```js
 import { connect } from "@eliware/ssh-client";
@@ -35,9 +37,11 @@ Use `privateKeyPath` for a key file.
 Use `password` for password authentication.
 Use `agent` for an SSH agent socket.
 Use `passphrase` with an encrypted private key.
+Set `agent` to the socket path, such as `process.env.SSH_AUTH_SOCK`, when you use an agent.
 
 When you omit key options, the client checks `SSH_PRIVATE_KEY_PATH` first.
 It then checks `~/.ssh/id_ed25519` and `~/.ssh/id_rsa`.
+The client uses the first key file that it can read.
 The client uses `USER` or `USERNAME` when you omit `username`.
 
 Set `connectTimeout` in milliseconds to limit connection and authentication time.

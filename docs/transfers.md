@@ -3,6 +3,8 @@
 Use `upload()` and `download()` for one file copy.
 Use `ssh.upload()` or `ssh.download()` on a long-lived connection.
 These file copies use SFTP.
+Standalone calls require the same host, authentication, and host verification options as `connect()`.
+Calls on a connection use the authentication and host verification options from `connect()`.
 
 ## Upload a file
 
@@ -44,4 +46,5 @@ Set `timeout` in milliseconds to limit a file copy.
 The default is `0`, which sets no time limit.
 Pass an `AbortSignal` to cancel a file copy.
 The client closes the SFTP session when a file copy ends.
+The client leaves a long-lived SSH connection open after a file copy.
 Read [connections](connections.md) for long-lived connection setup.
