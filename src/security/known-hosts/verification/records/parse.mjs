@@ -12,5 +12,11 @@ export function validateRecordFields(record, utils) {
     return { invalid: false, keyRecord };
   }
   if (fields.length < 3) return { invalid: true };
-  return { invalid: false, keyRecord: `${fields[1]} ${fields[2]}` };
+  const keyRecord = `${fields[1]} ${fields[2]}`;
+  try {
+    if (!utils.parseKey(keyRecord)?.getPublicSSH?.()) return { invalid: true };
+  } catch {
+    return { invalid: true };
+  }
+  return { invalid: false, keyRecord };
 }

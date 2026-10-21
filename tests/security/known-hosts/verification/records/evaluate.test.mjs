@@ -111,6 +111,23 @@ test("rejects a malformed record for a matching host", () => {
   });
 });
 
+test("rejects a malformed plain record before a later trusted record", () => {
+  const publicKey = { equals: () => true };
+  const utils = {
+    parseKey: (record) =>
+      record === "ssh-ed25519 good-key" ? { getPublicSSH: () => publicKey } : null,
+  };
+  expect(
+    evaluateRecords(
+      "router ssh-ed25519 malformed-key\nrouter ssh-ed25519 good-key",
+      ["router"],
+      { getPublicSSH: () => publicKey },
+      null,
+      utils,
+    ),
+  ).toMatchObject({ invalid: true });
+});
+
 test("ignores malformed marked records for unrelated hosts", () => {
   const publicKey = { equals: (other) => other === publicKey };
   const utils = {

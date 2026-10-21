@@ -39,3 +39,18 @@ test.each([
     validateRecordFields(parseRecordLine("@revoked router ssh-ed25519 key"), { parseKey }),
   ).toEqual({ invalid: true });
 });
+
+test.each([
+  ["returns no parsed key", () => null],
+  ["returns no public key", () => ({ getPublicSSH: () => undefined })],
+  [
+    "throws during key parsing",
+    () => {
+      throw Error("invalid key");
+    },
+  ],
+])("rejects a plain record when parsing %s", (_case, parseKey) => {
+  expect(validateRecordFields(parseRecordLine("router ssh-ed25519 key"), { parseKey })).toEqual({
+    invalid: true,
+  });
+});

@@ -27,19 +27,27 @@ test("resolves when the transport becomes ready", async () => {
   await expect(startClientEstablishment(client, {}, 100)).resolves.toBe(client);
 });
 
-test("rejects when connect throws after a synchronous ready event", async () => {
+test("resolves when connect throws after a synchronous ready event", async () => {
   class ReadyThenThrowClient extends EventClient {
     connect() {
       this.handlers.get("ready")();
       throw Error("connect failed");
     }
   }
-  await expect(startClientEstablishment(new ReadyThenThrowClient(), {}, 100)).rejects.toMatchObject(
-    {
-      code: "SSH_CONNECTION",
-      message: "SSH connection error: connect failed",
-    },
-  );
+  const client = new ReadyThenThrowClient();
+  await expect(startClientEstablishment(client, {}, 100)).resolves.toBe(client);
+});
+
+test("rejects when connect throws before a ready event", async () => {
+  class ThrowingClient extends EventClient {
+    connect() {
+      throw Error("connect failed");
+    }
+  }
+  await expect(startClientEstablishment(new ThrowingClient(), {}, 100)).rejects.toMatchObject({
+    code: "SSH_CONNECTION",
+    message: "SSH connection error: connect failed",
+  });
 });
 
 test("ignores synchronous end and close events after ready", async () => {

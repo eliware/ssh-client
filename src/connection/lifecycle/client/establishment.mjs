@@ -70,7 +70,11 @@ export function startClientEstablishment(client, config, timeout) {
       if (readyReceived) finish();
     } catch (cause) {
       connecting = false;
-      finish(new SshError(`SSH connection error: ${errorMessage(cause)}`, "SSH_CONNECTION", cause));
+      if (readyReceived) finish();
+      else
+        finish(
+          new SshError(`SSH connection error: ${errorMessage(cause)}`, "SSH_CONNECTION", cause),
+        );
     }
   });
 }

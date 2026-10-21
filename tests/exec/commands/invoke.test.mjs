@@ -9,10 +9,12 @@ test("invokes the transport with the appropriate argument shape", () => {
   invokeCommand(client, "run", { env: { A: "1" }, envFallback: undefined, pty: false }, done);
   invokeCommand(client, "run", { env: undefined, envFallback: undefined, pty: true }, done);
   invokeCommand(client, "run", { env: undefined, envFallback: "posix", pty: false }, done);
+  invokeCommand(client, "run", { env: { A: "1" }, envFallback: "posix", pty: false }, done);
   expect(calls).toEqual([
     ["run", done],
     ["run", { env: { A: "1" }, pty: false }, done],
     ["run", { pty: true }, done],
+    ["run", { pty: false }, done],
     ["run", { pty: false }, done],
   ]);
 });
