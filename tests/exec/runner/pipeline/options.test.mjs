@@ -56,3 +56,15 @@ test("rejects aborted execution during option preparation", async () => {
     }),
   ).rejects.toMatchObject({ code: "SSH_CANCELLED" });
 });
+
+test("wraps connection security setup failures as invalid options", async () => {
+  await expect(
+    prepareExecution({
+      host: "router",
+      commands: [],
+      privateKey: "KEY",
+      hostVerifier: "invalid",
+      ClientClass: class {},
+    }),
+  ).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
+});

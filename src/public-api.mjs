@@ -5,6 +5,7 @@ import { createHostVerifier as createHostVerifierImpl } from "./security/known-h
 import { sshExec as sshExecImpl } from "./exec/runner/pipeline/execute.mjs";
 import { connect as connectImpl } from "./connection/lifecycle/client/connect.mjs";
 import { logCommandResults, operationMetadata, runLoggedOperation } from "./logging/operation.mjs";
+import { singleTransfer } from "./operations/single-transfer.mjs";
 
 export const SshError = SshErrorImpl;
 export const loadKey = loadKeyImpl;
@@ -26,20 +27,6 @@ export function connect(options = {}) {
   const logger = options?.logger;
   const metadata = operationMetadata("connect", options);
   return runLoggedOperation(logger, metadata, () => connectImpl(options));
-}
-
-async function singleTransfer(operation, options) {
-  const config = options ?? {};
-  const { logger, ...connectionOptions } = config;
-  const metadata = operationMetadata(operation, config);
-  return runLoggedOperation(logger, metadata, async () => {
-    const connection = await connectImpl(connectionOptions);
-    try {
-      return await connection[operation](config);
-    } finally {
-      await connection.close();
-    }
-  });
 }
 
 export function upload(options = {}) {

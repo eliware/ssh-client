@@ -2,6 +2,10 @@ import { expect, jest, test } from "@jest/globals";
 import { connect } from "../../../../src/connection/lifecycle/client/connect.mjs";
 import { prepareConnection } from "../../../../src/connection/lifecycle/client/options.mjs";
 
+test("rejects missing connection options", async () => {
+  await expect(prepareConnection()).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
+});
+
 test("uses fallback username and default port", async () => {
   const originalUser = process.env.USER;
   const originalUsername = process.env.USERNAME;

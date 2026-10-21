@@ -80,6 +80,66 @@ test("reports stderr failures and clears the active timer", () => {
   expect(finish).toHaveBeenCalledWith(expect.objectContaining({ code: "SSH_EXEC" }));
 });
 
+test("closes the command channel when output reaches its limit", () => {
+  const handlers = {};
+  const close = jest.fn();
+  const stream = {
+    on(event, handler) {
+      handlers[event] = handler;
+      return this;
+    },
+    stderr: { on() {} },
+    close,
+  };
+  const context = {
+    maxOutput: 1,
+    commandTimeout: 0,
+    keepAlive: false,
+    conn: { exec: (_command, callback) => callback(null, stream) },
+    cwd: undefined,
+    env: undefined,
+    envFallback: undefined,
+    pty: false,
+    results: [],
+    setCommandStarting: jest.fn(),
+    setActiveTimer: jest.fn(),
+    clearActiveTimer: jest.fn(),
+    isSettled: () => false,
+    finish: jest.fn(),
+  };
+  runCommand(context, "echo output", jest.fn());
+  handlers.data("over limit");
+  expect(close).toHaveBeenCalledTimes(1);
+});
+
+test("wraps synchronous command invocation errors", () => {
+  const finish = jest.fn();
+  const context = {
+    maxOutput: 10,
+    commandTimeout: 0,
+    keepAlive: false,
+    conn: {
+      exec: () => {
+        throw Error("invoke failed");
+      },
+    },
+    cwd: undefined,
+    env: undefined,
+    envFallback: undefined,
+    pty: false,
+    results: [],
+    setCommandStarting: jest.fn(),
+    setActiveTimer: jest.fn(),
+    clearActiveTimer: jest.fn(),
+    isSettled: () => false,
+    finish,
+  };
+  runCommand(context, "echo failure", jest.fn());
+  expect(finish).toHaveBeenCalledWith(
+    expect.objectContaining({ code: "SSH_EXEC", message: "SSH exec error: invoke failed" }),
+  );
+});
+
 test("clears a timer when the command timeout completes synchronously", async () => {
   jest.useFakeTimers();
   const context = {

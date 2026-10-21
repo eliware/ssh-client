@@ -1,53 +1,14 @@
-import { SshError } from "../../../errors.mjs";
 import { buildCommand } from "../../commands/environment/command.mjs";
 import { createOutputCollector } from "../../commands/output/collector.mjs";
-import { startCommandTimeout } from "../../commands/timeout.mjs";
 import { invokeCommand } from "../../commands/invoke.mjs";
-import { attachCommandChannel, commandInvocationError } from "./command/channel.mjs";
+import { createCommandCallback } from "./command/callback.mjs";
 
 export function runCommand(context, command, next) {
   const started = Date.now();
-  let channel;
-  let commandTimer;
-  let completed = false;
-  let timedOut = false;
-  const output = createOutputCollector(context.maxOutput, () => channel);
+  const channel = { value: undefined };
+  const output = createOutputCollector(context.maxOutput, () => channel.value);
   context.setCommandStarting(true);
-  const done = (error, stream) => {
-    context.setCommandStarting(false);
-    if (context.isSettled() || timedOut) {
-      stream?.close?.();
-      return;
-    }
-    if (error) return context.finish(commandInvocationError(error));
-    channel = stream;
-    attachCommandChannel({
-      stream,
-      output,
-      context,
-      command,
-      started,
-      commandTimer,
-      isCompleted: () => completed,
-      markCompleted: () => {
-        completed = true;
-      },
-      next,
-    });
-  };
-  context.setActiveTimer(
-    (commandTimer = startCommandTimeout({
-      timeout: context.commandTimeout,
-      keepAlive: context.keepAlive,
-      conn: context.conn,
-      getChannel: () => channel,
-      onTimeout: (error) => {
-        completed = true;
-        timedOut = true;
-        context.finish(error);
-      },
-    })),
-  );
+  const callback = createCommandCallback({ context, command, output, started, next, channel });
   try {
     invokeCommand(
       context.conn,
@@ -57,12 +18,10 @@ export function runCommand(context, command, next) {
         envFallback: context.envFallback,
       }),
       { env: context.env, envFallback: context.envFallback, pty: context.pty },
-      done,
+      callback.done,
     );
   } catch (error) {
-    clearTimeout(commandTimer);
-    context.finish(new SshError(`SSH exec error: ${error.message}`, "SSH_EXEC", error));
+    callback.fail(error);
   }
-  if (completed) clearTimeout(commandTimer);
-  context.setCommandStarting(false);
+  callback.finishInvocation();
 }
