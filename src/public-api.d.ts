@@ -35,7 +35,6 @@ export interface SshExecOptions extends SshConnectionOptions {
   env?: Record<string, string | number | boolean>;
   envFallback?: "posix" | "powershell" | "cmd";
   pty?: boolean;
-  keepAlive?: boolean;
 }
 export interface SshExecResult {
   command: string;
@@ -112,6 +111,6 @@ export declare function loadKey(options?: {
   fsLib?: any;
   homedirFn?: () => string;
 }): Promise<string | Buffer>;
-export declare function expandPath(value: string, homedirFn?: () => string): string;
+export declare function expandPath(value?: string, homedirFn?: () => string): string | undefined;
 export declare function upload(options: SshConnectionOptions & UploadOptions): Promise<void>;
 export declare function download(options: SshConnectionOptions & DownloadOptions): Promise<void>;

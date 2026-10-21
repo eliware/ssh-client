@@ -111,7 +111,6 @@ const privateKey = await loadKey({ privateKeyPath: keyPath });
 | `env`            | Environment variable names and string, number, or Boolean values.    |
 | `envFallback`    | Shell method for environment setup: `posix`, `powershell`, or `cmd`. |
 | `pty`            | Request a pseudo-terminal for a command. Default: `false`.           |
-| `keepAlive`      | Keep the SSH transport open after `sshExec`. Default: `false`.       |
 
 `connect().exec(commands, options)` accepts `commandTimeout`, `timeout`, `signal`, `cwd`, `env`, `envFallback`, and `pty`.
 Read the [command guide](commands.md) for behavior and result fields.

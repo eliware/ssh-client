@@ -6,4 +6,5 @@ test("expands home-relative paths", () => {
     "C:/fixture/home/.ssh/known_hosts",
   );
   expect(expandHomePath("C:/fixture/tmp/key", () => "C:/fixture/home")).toBe("C:/fixture/tmp/key");
+  expect(expandHomePath()).toBeUndefined();
 });
