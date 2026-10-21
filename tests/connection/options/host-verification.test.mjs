@@ -17,13 +17,21 @@ test("adapts a callback-style custom verifier that returns undefined", () => {
   expect(callback).toHaveBeenCalledWith(true);
 });
 
-test("creates a verifier from known-host records", () => {
-  const verifier = prepareHostVerification({
-    host: "router",
-    port: 22,
-    knownHosts: "router ssh-ed25519 AAAA",
-  });
-  expect(typeof verifier).toBe("function");
+test("uses the configured known-host source for the default verifier", async () => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date("2026-10-21T12:00:00.000Z"));
+  const callback = jest.fn();
+  try {
+    const verifier = prepareHostVerification({
+      host: "router",
+      knownHosts: "router ssh-ed25519 AAAA",
+    });
+    verifier(Buffer.from("invalid key"), callback);
+    await jest.runAllTimersAsync();
+    expect(callback).toHaveBeenCalledWith(false);
+  } finally {
+    jest.useRealTimers();
+  }
 });
 
 test("requires a verifier or trust source for the default client", () => {

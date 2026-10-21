@@ -1,4 +1,5 @@
 import { SshError } from "../../errors.mjs";
+import { wrapStreamClose } from "./close.mjs";
 export function createStreamCompletion(stream, closeStream) {
   if (typeof stream.once !== "function") return Promise.resolve({ code: null });
   return new Promise((resolve, reject) => {
@@ -30,12 +31,5 @@ export function createStreamCompletion(stream, closeStream) {
 export function prepareStreamCompletion(stream) {
   const closeStream = stream.close?.bind(stream);
   stream.completion = createStreamCompletion(stream, closeStream);
-  return () => {
-    stream.close = () => {
-      try {
-        closeStream?.();
-        stream.end?.();
-      } catch {}
-    };
-  };
+  return wrapStreamClose(stream, closeStream);
 }

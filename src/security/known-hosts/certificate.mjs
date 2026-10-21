@@ -1,9 +1,9 @@
 import { readString } from "./encoding/read/string.mjs";
-import { encodeString } from "./encoding/encode-string.mjs";
 import { readUint64 } from "./encoding/read/uint64.mjs";
 import { readUint32 } from "./encoding/read/uint32.mjs";
 import { readPrincipals } from "./certificates/principals.mjs";
 import { validateCertificateOptions } from "./certificates/options.mjs";
+import { extractCertificatePublicKey } from "./certificates/public-key.mjs";
 
 const CERT_SUFFIX = "-cert-v01@openssh.com";
 
@@ -59,7 +59,7 @@ export function parseCertificate(key) {
   return {
     typeText,
     base,
-    hostKey: Buffer.concat([encodeString(Buffer.from(base)), ...publicFields.map(encodeString)]),
+    hostKey: extractCertificatePublicKey(base, publicFields),
     kind: kind.value,
     after: after.value,
     before: before.value,

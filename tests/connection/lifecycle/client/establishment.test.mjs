@@ -42,11 +42,12 @@ test("rejects when connect throws after a synchronous ready event", async () => 
   );
 });
 
-test.each(["end", "close"])("ignores a synchronous %s event after ready", async (event) => {
+test("ignores synchronous end and close events after ready", async () => {
   class ReadyThenEndClient extends EventClient {
     connect() {
       this.handlers.get("ready")();
-      this.handlers.get(event)();
+      this.handlers.get("end")();
+      this.handlers.get("close")();
     }
   }
   const client = new ReadyThenEndClient();
@@ -90,16 +91,19 @@ test("starts the transport before a queued ready event resolves", async () => {
   expect(client.connect).toHaveBeenCalledTimes(1);
 });
 
-test.each(["error", "close"])("rejects when the transport emits %s before ready", async (event) => {
-  class EarlyEventClient extends EventClient {
-    connect() {
-      this.handlers.get(event)(Error("early event"));
+test.each(["error", "end", "close"])(
+  "rejects when the transport emits %s before ready",
+  async (event) => {
+    class EarlyEventClient extends EventClient {
+      connect() {
+        this.handlers.get(event)(Error("early event"));
+      }
     }
-  }
-  await expect(startClientEstablishment(new EarlyEventClient(), {}, 100)).rejects.toMatchObject({
-    code: "SSH_CONNECTION",
-  });
-});
+    await expect(startClientEstablishment(new EarlyEventClient(), {}, 100)).rejects.toMatchObject({
+      code: "SSH_CONNECTION",
+    });
+  },
+);
 
 test("normalizes a primitive transport error", async () => {
   class PrimitiveErrorClient extends EventClient {
