@@ -11,20 +11,15 @@ import {
   download,
 } from "../src/public-api.mjs";
 
-test("exports the documented public API", () => {
+test("exports the public API and rejects missing operation options", async () => {
   expect(SshError).toBeDefined();
   for (const api of [loadKey, expandPath, createHostVerifier, sshExec, connect, upload, download]) {
     expect(typeof api).toBe("function");
   }
-});
-
-test("rejects public operations without valid options", async () => {
-  await expect(sshExec()).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
-  await expect(connect()).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
-  await expect(upload()).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
-  await expect(download()).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
-  await expect(upload(null)).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
-  await expect(download(null)).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
+  for (const operation of [sshExec, connect, upload, download])
+    await expect(operation()).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
+  for (const operation of [upload, download])
+    await expect(operation(null)).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
 });
 
 test("rejects invalid transfer paths through the public API", async () => {

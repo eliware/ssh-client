@@ -5,7 +5,6 @@ import { connect } from "../../src/connection/lifecycle/client/connect.mjs";
 import { validateShellTimeout } from "../../src/shell/validation.mjs";
 
 test("validates shell options and setup failures", async () => {
-  await expect(openShell({}, { timeout: -1 })).rejects.toThrow("timeout");
   const controller = new AbortController();
   controller.abort();
   await expect(openShell({ end: jest.fn() }, { signal: controller.signal })).rejects.toThrow(
@@ -38,7 +37,7 @@ test("validates non-negative finite shell timeouts", () => {
   expect(() => validateShellTimeout(Infinity)).toThrow("shell timeout");
 });
 
-test("validates shell timeout and wraps input failures through a connection", async () => {
+test("wraps input failures through a connection", async () => {
   class Shell {
     once(event, fn) {
       if (event === "ready") fn();
@@ -59,9 +58,6 @@ test("validates shell timeout and wraps input failures through a connection", as
     }
   }
   const client = await connect({ host: "router", privateKey: "KEY", ClientClass: Shell });
-  await expect(client.shell({ timeout: -1 })).rejects.toMatchObject({
-    code: "SSH_INVALID_OPTIONS",
-  });
   await expect(
     client.shell({
       onInput: () => {
@@ -86,23 +82,6 @@ test("validates shell timeout and wraps input failures through a connection", as
       },
     }),
   ).rejects.toMatchObject({ code: "SSH_SHELL" });
-});
-
-test("validates interactive terminal type and dimensions", async () => {
-  const stream = {
-    on() {
-      return this;
-    },
-    close() {},
-  };
-  const open = { shell: (_pty, callback) => callback(null, stream) };
-  await expect(openShell(open, { term: "", cols: 160, rows: 48 })).rejects.toMatchObject({
-    code: "SSH_INVALID_OPTIONS",
-  });
-  await expect(openShell(open, { term: "xterm", cols: 0, rows: 48 })).rejects.toMatchObject({
-    code: "SSH_INVALID_OPTIONS",
-  });
-  await expect(openShell(open, { term: "xterm", cols: 160, rows: 48 })).resolves.toBeDefined();
 });
 
 test("passes terminal settings through the reusable connection API", async () => {

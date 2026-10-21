@@ -7,11 +7,6 @@ export function operationMetadata(operation, options = {}, details = {}) {
   };
 }
 
-export function execOperationMetadata(options = {}) {
-  const details = Array.isArray(options?.commands) ? { commandCount: options.commands.length } : {};
-  return operationMetadata("exec", options, details);
-}
-
 export function logRecord(logger, level, message, metadata) {
   const write = logger?.[level];
   if (typeof write !== "function") return;
@@ -35,22 +30,4 @@ export async function runLoggedOperation(logger, metadata, action, onSuccess) {
     logRecord(logger, "error", `${metadata.operation} failed`, failure);
     throw error;
   }
-}
-
-export function logCommandResults(logger, metadata, results) {
-  if (!Array.isArray(results)) return;
-  results.forEach((result, index) => {
-    const succeeded = result.code === 0;
-    logRecord(
-      logger,
-      succeeded ? "http" : "warn",
-      succeeded ? "SSH command completed" : "SSH command returned a nonzero exit code",
-      {
-        ...metadata,
-        commandIndex: index + 1,
-        exitCode: result.code,
-        duration: result.duration,
-      },
-    );
-  });
 }

@@ -2,12 +2,8 @@ import { openShell } from "../../shell.mjs";
 import { reusableExec, reusableUpload, reusableDownload } from "../../operations/reusable.mjs";
 import { closeOnTransportFailure } from "./failure-state.mjs";
 import { unavailableOperation } from "./unavailable.mjs";
-import {
-  logCommandResults,
-  logRecord,
-  operationMetadata,
-  runLoggedOperation,
-} from "../../logging/operation.mjs";
+import { logCommandResults } from "../../logging/command.mjs";
+import { logRecord, operationMetadata, runLoggedOperation } from "../../logging/operation.mjs";
 
 export function createReusableOperations({ client, options, state, close, serialize }) {
   const unavailable = unavailableOperation;

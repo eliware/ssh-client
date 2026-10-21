@@ -4,12 +4,8 @@ import { expandHomePath as expandPathImpl } from "./paths/expand-home-path.mjs";
 import { createHostVerifier as createHostVerifierImpl } from "./security/known-hosts/verification/verifier.mjs";
 import { sshExec as sshExecImpl } from "./exec/runner/pipeline/execute.mjs";
 import { connect as connectImpl } from "./connection/lifecycle/client/connect.mjs";
-import {
-  execOperationMetadata,
-  logCommandResults,
-  operationMetadata,
-  runLoggedOperation,
-} from "./logging/operation.mjs";
+import { execOperationMetadata, logCommandResults } from "./logging/command.mjs";
+import { operationMetadata, runLoggedOperation } from "./logging/operation.mjs";
 import { singleTransfer } from "./operations/single-transfer.mjs";
 
 export const SshError = SshErrorImpl;
