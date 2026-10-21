@@ -1,4 +1,5 @@
 import { SshError } from "../../errors.mjs";
+import { validateUploadMode } from "./validate-upload-mode.mjs";
 
 export function validateTransferOptions(config, operation, fields) {
   if (
@@ -13,16 +14,7 @@ export function validateTransferOptions(config, operation, fields) {
       undefined,
       { operation, phase: "options" },
     );
-  if (
-    config.mode !== undefined &&
-    (!Number.isInteger(config.mode) || config.mode < 0 || config.mode > 0o7777)
-  )
-    throw new SshError(
-      "upload mode must be a valid permission value",
-      "SSH_INVALID_OPTIONS",
-      undefined,
-      { operation, phase: "options" },
-    );
+  if (operation === "upload") validateUploadMode(config);
   if (!Number.isFinite(config.timeout ?? 0) || (config.timeout ?? 0) < 0)
     throw new SshError(
       `${operation} timeout must be non-negative`,

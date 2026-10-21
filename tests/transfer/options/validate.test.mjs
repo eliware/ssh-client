@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { validateTransferOptions } from "../../../src/transfer/options/validate.mjs";
 
-test("validates transfer fields, modes, and timeouts", () => {
+test("validates shared transfer fields and timeouts", () => {
   expect(() =>
     validateTransferOptions({ localPath: "a", remotePath: "b" }, "upload", [
       "localPath",
@@ -18,15 +18,9 @@ test("validates transfer fields, modes, and timeouts", () => {
     ]),
   ).toThrow("options");
   expect(() =>
-    validateTransferOptions({ localPath: "a", remotePath: "b", mode: -1 }, "upload", [
-      "localPath",
+    validateTransferOptions({ localPath: "a", remotePath: "b", mode: -1 }, "download", [
       "remotePath",
-    ]),
-  ).toThrow("mode");
-  expect(() =>
-    validateTransferOptions({ localPath: "a", remotePath: "b", mode: 0o600 }, "upload", [
       "localPath",
-      "remotePath",
     ]),
   ).not.toThrow();
   expect(() =>

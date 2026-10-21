@@ -1,6 +1,6 @@
 import ssh2 from "@eliware/ssh2";
 import { SshError } from "../../../errors.mjs";
-import { prepareConnectionSecurity } from "../../../connection/options/prepare-connection-security.mjs";
+import { prepareExecutionSecurity } from "../../options/security.mjs";
 import { validateOptions } from "../../options/validation.mjs";
 
 const { Client } = ssh2;
@@ -37,12 +37,7 @@ export async function prepareExecution(options) {
     envFallback,
     shell,
   });
-  let security;
-  try {
-    security = await prepareConnectionSecurity(options, Client);
-  } catch (error) {
-    throw new SshError(error.message, "SSH_INVALID_OPTIONS", error);
-  }
+  const security = await prepareExecutionSecurity(options, Client);
   if (signal?.aborted)
     throw new SshError("SSH operation cancelled", "SSH_CANCELLED", undefined, {
       operation: "exec",
