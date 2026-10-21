@@ -23,34 +23,27 @@ An ESM-first Node.js SSH client with host-key checks, long-lived connections, co
 
 ## Features
 
-- Run one or more commands through SSH.
-- Keep one connection for commands, shells, and file transfers.
-- Verify host keys and OpenSSH host certificates.
-- Use a private key, password, or SSH agent.
-- Set time limits and cancellation signals.
-- Use typed public API declarations.
+Run SSH commands, open shells, copy files, and verify host keys through Node.js.
 
 ## Requirements
 
-- Use Node.js 26 or later with native ESM.
-- Provide trusted host-key data or a host certificate authority.
-- Provide access through a private key, password, or SSH agent.
+Use Node.js 26 or later with native ESM.
+Configure trusted host data and an authentication method for each SSH server.
 
 ## Setup
 
-Install the package with `npm install @eliware/ssh-client`.
-Read the [installation and connection guide](docs/usage.md) before first use.
+Run `npm install @eliware/ssh-client` in your project.
+Read the [installation guide](docs/usage.md) before you connect.
 
 ## Usage
 
 Import `sshExec` to run commands.
-Read the [user guide](docs/README.md) for shell, file-copy, and connection examples.
+Read the [user guide](docs/README.md) for connection, command, shell, file copy, and host verification details.
 Read [RELEASE_NOTES.md](RELEASE_NOTES.md) for release history.
 
 ## Development
 
-Run `npm ci` to install the locked packages.
-Read [docs/README.md](docs/README.md), [specs/README.md](specs/README.md), and [examples/README.md](examples/README.md) before edits.
+Read the [specifications index](specs/README.md) for repository requirements.
 
 ## Testing
 
@@ -62,22 +55,24 @@ Read the [troubleshooting guide](docs/troubleshooting.md) when an operation fail
 
 ## Security
 
-Read the [host trust guide](docs/security.md) before you set host verification or authentication options.
+Read the [host verification guide](docs/security.md) before you configure host trust or authentication.
 
 ## API
 
-The package exports `connect`, `sshExec`, `createHostVerifier`, `loadKey`, `expandPath`, `upload`, `download`, and `SshError`.
-Read the [API guide](docs/api.md) and declarations in `src/public-api.d.ts`.
+The package exports its public API from `src/public-api.mjs` and its declarations from `src/public-api.d.ts`.
+Read the [API guide](docs/api.md) for exported functions and options.
 
 ## Packaging
 
-The package includes `src/`, `docs/`, `examples/`, `specs/`, and required root files.
-Run `npm run pack` to check package contents.
+The package includes `src/`, `docs/`, `README.md`, `AGENTS.md`, `LICENSE`, `RELEASE_NOTES.md`, `examples/`, and `specs/`.
+Use a numeric `MAJOR.MINOR.PATCH` version and a matching `v<version>` tag.
+The npm workflow validates the tagged version, runs `npm test`, and publishes with provenance.
+Follow Eliware Operations procedures for release authorization.
 
 ## Examples
 
-Read [examples/README.md](examples/README.md) for the runnable example.
-Use your own host data and key files.
+Run `node examples/example.mjs` from the repository root.
+Read [examples/README.md](examples/README.md) for example requirements.
 
 ## Support
 
