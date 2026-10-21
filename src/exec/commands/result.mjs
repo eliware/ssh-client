@@ -1,4 +1,4 @@
-import { fitBytes } from "./output/decode.mjs";
+import { normalizeResultText } from "./output/result-text.mjs";
 
 export function createCommandResult({
   command,
@@ -18,7 +18,7 @@ export function createCommandResult({
     command,
     stdout,
     stderr,
-    result: fitBytes(Buffer.from(merged), maxOutput),
+    result: normalizeResultText(merged, maxOutput),
     truncated,
     code: exitCode ?? closeCode ?? null,
     signal: signal === undefined ? undefined : String(signal),

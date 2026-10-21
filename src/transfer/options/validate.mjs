@@ -1,5 +1,5 @@
 import { SshError } from "../../errors.mjs";
-import { validateUploadMode } from "./validate-upload-mode.mjs";
+import { validateTransferOperation } from "./operation.mjs";
 
 export function validateTransferOptions(config, operation, fields) {
   if (
@@ -14,7 +14,7 @@ export function validateTransferOptions(config, operation, fields) {
       undefined,
       { operation, phase: "options" },
     );
-  if (operation === "upload") validateUploadMode(config);
+  validateTransferOperation(config, operation);
   if (!Number.isFinite(config.timeout ?? 0) || (config.timeout ?? 0) < 0)
     throw new SshError(
       `${operation} timeout must be non-negative`,

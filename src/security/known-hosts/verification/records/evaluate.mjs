@@ -1,6 +1,7 @@
 import { matchesList } from "../../matching/list.mjs";
 import { sameKey } from "../keys.mjs";
-import { parseRecordLine, validateRecordFields } from "./parse.mjs";
+import { parseRecordLine } from "./line.mjs";
+import { validateRecordFields } from "./parse.mjs";
 
 export function evaluateRecords(text, hosts, actual, cert, utils) {
   const authorities = [];
