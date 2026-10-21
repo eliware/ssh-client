@@ -1,7 +1,7 @@
 import { SshError } from "../../../errors.mjs";
 import { attachConnectionEvents } from "../../connection/events.mjs";
 import { startConnectionTimeout } from "../../connection/timeout.mjs";
-import { resolveClientClass } from "./transport.mjs";
+import { createExecutionClient } from "./connection/create-execution-client.mjs";
 
 export function startExecutionConnection(config, handlers) {
   const {
@@ -17,21 +17,7 @@ export function startExecutionConnection(config, handlers) {
     knownHosts,
     connectTimeout,
   } = config;
-  let conn;
-  try {
-    conn = new (resolveClientClass(ClientClass))();
-  } catch (error) {
-    throw new SshError(
-      `SSH connection error: ${error.message || String(error)}`,
-      "SSH_CONNECTION",
-      error,
-    );
-  }
-  if (typeof conn.on !== "function" || typeof conn.connect !== "function")
-    throw new SshError(
-      "SSH client does not provide the required transport interface",
-      "SSH_CONNECTION",
-    );
+  const conn = createExecutionClient(ClientClass);
   const timer = startConnectionTimeout(connectTimeout, handlers.onTimeout);
   const onReady = () => {
     clearTimeout(timer);

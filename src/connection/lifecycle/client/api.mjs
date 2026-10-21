@@ -1,15 +1,11 @@
 import { closeConnection } from "./close.mjs";
-import { createConnectionState } from "../../reusable/state.mjs";
+import { observeReusableClientState } from "./transport-state.mjs";
 import { createOperationQueue } from "../../reusable/operation-queue.mjs";
 import { createReusableOperations } from "../../reusable/operations.mjs";
 
 export function createReusableClientApi(client, options) {
   let closePromise;
-  const state = createConnectionState();
-  const markClosed = () => state.set("closed");
-  client.once?.("end", markClosed);
-  client.once?.("close", markClosed);
-  client.once?.("error", markClosed);
+  const state = observeReusableClientState(client);
   const close = () => {
     if (closePromise) return closePromise;
     closePromise = closeConnection(client, (value) => state.set(value));

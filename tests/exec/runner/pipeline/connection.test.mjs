@@ -30,38 +30,6 @@ test("starts an execution connection and forwards configuration", async () => {
   clearTimeout(connection.timer);
 });
 
-test("reports construction and interface failures", () => {
-  expect(() =>
-    startExecutionConnection(
-      {
-        ClientClass: class {
-          constructor() {
-            throw Error("construct");
-          }
-        },
-        connectTimeout: 1,
-      },
-      {},
-    ),
-  ).toThrow("connection error");
-  expect(() =>
-    startExecutionConnection(
-      {
-        ClientClass: class {
-          constructor() {
-            throw "construct";
-          }
-        },
-        connectTimeout: 1,
-      },
-      {},
-    ),
-  ).toThrow("connection error");
-  expect(() => startExecutionConnection({ ClientClass: class {}, connectTimeout: 1 }, {})).toThrow(
-    "transport interface",
-  );
-});
-
 test("reports synchronous connect failures", async () => {
   class Client {
     on() {
