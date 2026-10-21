@@ -1,7 +1,8 @@
-import { signalReady } from "./signal-ready.mjs";
+import { createClientReadyAdapter } from "./ready.mjs";
 
 export function createClientEventAdapter(client) {
   return {
+    ...createClientReadyAdapter(client),
     on(...args) {
       client.on(...args);
       return this;
@@ -17,9 +18,6 @@ export function createClientEventAdapter(client) {
     emit(...args) {
       client.emit?.(...args);
       return this;
-    },
-    connect() {
-      signalReady(client);
     },
   };
 }

@@ -2,6 +2,7 @@ import { SshError } from "../../../errors.mjs";
 import { completeExecution } from "./completion.mjs";
 import { createExecutionEvents } from "./create-execution/events.mjs";
 import { createExecutionQueue } from "./create-execution/queue.mjs";
+import { createExecutionState } from "./create-execution/state.mjs";
 import { createFinisher } from "./finisher.mjs";
 import { startExecutionConnection } from "./connection.mjs";
 import { prepareExecutionWithCancellation } from "./prepare-execution.mjs";
@@ -9,21 +10,7 @@ import { prepareExecutionWithCancellation } from "./prepare-execution.mjs";
 export async function sshExec(options = {}) {
   const config = await prepareExecutionWithCancellation(options);
   return new Promise((resolve, reject) => {
-    const state = {
-      get value() {
-        return this.settled;
-      },
-      set value(value) {
-        this.settled = value;
-      },
-      results: [],
-      ended: false,
-      commandStarting: false,
-      closeDeferred: false,
-      transportClosed: false,
-      settled: false,
-      readyHandled: false,
-    };
+    const state = createExecutionState();
     let connectionTimer;
     let detachConnectionEvents;
     const finish = createFinisher(state, (error) =>
