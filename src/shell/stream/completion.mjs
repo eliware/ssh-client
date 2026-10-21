@@ -26,3 +26,16 @@ export function createStreamCompletion(stream, closeStream) {
     });
   });
 }
+
+export function prepareStreamCompletion(stream) {
+  const closeStream = stream.close?.bind(stream);
+  stream.completion = createStreamCompletion(stream, closeStream);
+  return () => {
+    stream.close = () => {
+      try {
+        closeStream?.();
+        stream.end?.();
+      } catch {}
+    };
+  };
+}

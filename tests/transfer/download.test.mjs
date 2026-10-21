@@ -12,8 +12,3 @@ test("starts a download with a valid options object", async () => {
     ),
   ).resolves.toBeUndefined();
 });
-test("rejects invalid download options", async () => {
-  await expect(download({}, { remotePath: "", localPath: "a" })).rejects.toMatchObject({
-    code: "SSH_INVALID_OPTIONS",
-  });
-});

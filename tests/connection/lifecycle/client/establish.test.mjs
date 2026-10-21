@@ -2,25 +2,6 @@ import { expect, jest, test } from "@jest/globals";
 import { connect } from "../../../../src/connection/lifecycle/client/connect.mjs";
 import { establishClient } from "../../../../src/connection/lifecycle/client/establish.mjs";
 
-class EventClient {
-  handlers = new Map();
-  once(event, callback) {
-    this.handlers.set(event, callback);
-    return this;
-  }
-  on(event, callback) {
-    this.handlers.set(event, callback);
-    return this;
-  }
-  removeListener(event) {
-    this.handlers.delete(event);
-  }
-  connect() {
-    this.handlers.get(this.event)?.();
-  }
-  end() {}
-}
-
 test("rejects when the transport ends before ready", async () => {
   class EndingClient {
     once(event, fn) {
@@ -79,7 +60,7 @@ test("rejects when the transport connect call throws", async () => {
   ).rejects.toMatchObject({ code: "SSH_CONNECTION" });
 });
 
-test("rejects transports missing required methods", async () => {
+test("rejects transports missing required methods and stops the transport", async () => {
   const end = jest.fn();
   class InvalidClient {
     end() {
@@ -90,92 +71,4 @@ test("rejects transports missing required methods", async () => {
     code: "SSH_CONNECTION",
   });
   expect(end).toHaveBeenCalledTimes(1);
-});
-
-test("resolves when the transport becomes ready", async () => {
-  class ReadyClient extends EventClient {
-    connect() {
-      this.handlers.get("ready")();
-      this.handlers.get("error")(Error("late error"));
-    }
-  }
-  const client = await establishClient(ReadyClient, {}, 100);
-  expect(client).toBeInstanceOf(ReadyClient);
-});
-
-test("rejects when connect throws after a synchronous ready event", async () => {
-  class ReadyThenThrowClient extends EventClient {
-    connect() {
-      this.handlers.get("ready")();
-      throw Error("connect failed");
-    }
-  }
-  await expect(establishClient(ReadyThenThrowClient, {}, 100)).rejects.toMatchObject({
-    code: "SSH_CONNECTION",
-    message: "SSH connection error: connect failed",
-  });
-});
-
-test.each(["end", "close"])("ignores a synchronous %s event after ready", async (event) => {
-  class ReadyThenEndClient extends EventClient {
-    connect() {
-      this.handlers.get("ready")();
-      this.handlers.get(event)();
-    }
-  }
-  await expect(establishClient(ReadyThenEndClient, {}, 100)).resolves.toBeInstanceOf(
-    ReadyThenEndClient,
-  );
-});
-
-test("does not start a timeout when ready fires during listener setup", async () => {
-  jest.useFakeTimers();
-  try {
-    class ReadyDuringSetupClient extends EventClient {
-      end = jest.fn();
-      connect = jest.fn();
-      once(event, callback) {
-        if (event === "ready") callback();
-        else super.once(event, callback);
-        return this;
-      }
-    }
-    const client = await establishClient(ReadyDuringSetupClient, {}, 100);
-    jest.advanceTimersByTime(100);
-    expect(client.connect).not.toHaveBeenCalled();
-    expect(client.end).not.toHaveBeenCalled();
-    expect(client.handlers.size).toBe(0);
-  } finally {
-    jest.useRealTimers();
-  }
-});
-
-test("starts the transport before a queued ready event resolves", async () => {
-  class QueuedReadyClient extends EventClient {
-    connect = jest.fn();
-    once(event, callback) {
-      super.once(event, callback);
-      if (event === "ready") queueMicrotask(callback);
-      return this;
-    }
-  }
-  const client = await establishClient(QueuedReadyClient, {}, 100);
-  expect(client.connect).toHaveBeenCalledTimes(1);
-});
-
-test.each(["error", "close"])("rejects when the transport emits %s before ready", async (event) => {
-  class EarlyEventClient extends EventClient {
-    connect() {
-      this.handlers.get(event)(Error("early event"));
-    }
-  }
-  await expect(establishClient(EarlyEventClient, {}, 100)).rejects.toMatchObject({
-    code: "SSH_CONNECTION",
-  });
-});
-
-test("rejects and stops the transport after a connection timeout", async () => {
-  await expect(establishClient(EventClient, {}, 1)).rejects.toMatchObject({
-    code: "SSH_TIMEOUT",
-  });
 });

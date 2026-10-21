@@ -1,5 +1,8 @@
 import { expect, jest, test } from "@jest/globals";
-import { createStreamCompletion } from "../../../src/shell/stream/completion.mjs";
+import {
+  createStreamCompletion,
+  prepareStreamCompletion,
+} from "../../../src/shell/stream/completion.mjs";
 test("resolves close once", async () => {
   const handlers = {};
   const stream = {
@@ -48,4 +51,23 @@ test("handles string errors without cleanup and ignores later errors", async () 
   handlers.error("broken");
   handlers.error(Error("late"));
   await expect(completion).rejects.toMatchObject({ message: "SSH shell error: broken" });
+});
+
+test("wraps stream close and ends the stream", () => {
+  const close = jest.fn();
+  const end = jest.fn();
+  const stream = { once() {}, close, end };
+  const wrapClose = prepareStreamCompletion(stream);
+  expect(stream.close).toBe(close);
+  wrapClose();
+  stream.close();
+  expect(close).toHaveBeenCalledTimes(1);
+  expect(end).toHaveBeenCalledTimes(1);
+});
+
+test("wraps close when the stream has no close or end method", () => {
+  const stream = { once() {} };
+  const wrapClose = prepareStreamCompletion(stream);
+  wrapClose();
+  expect(() => stream.close()).not.toThrow();
 });

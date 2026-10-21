@@ -12,6 +12,3 @@ test("starts an upload with a valid options object", async () => {
     ),
   ).resolves.toBeUndefined();
 });
-test("rejects invalid upload options", async () => {
-  await expect(upload({}, null)).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
-});

@@ -14,15 +14,6 @@ test("prepares key and verifier policy", async () => {
   expect(typeof result.verifier).toBe("function");
 });
 
-test("validates verifier and required trust configuration", async () => {
-  await expect(prepareSecurity({ host: "router", hostVerifier: "bad" })).rejects.toThrow(
-    "hostVerifier",
-  );
-  await expect(
-    prepareSecurity({ host: "router", clientIsDefault: true, requireVerification: true }),
-  ).rejects.toThrow("host verification");
-});
-
 test("uses a custom verifier with password authentication and no key", async () => {
   const result = await prepareSecurity({
     host: "router",

@@ -27,6 +27,24 @@ test("rejects public operations without valid options", async () => {
   await expect(download(null)).rejects.toMatchObject({ code: "SSH_INVALID_OPTIONS" });
 });
 
+test("rejects invalid transfer paths through the public API", async () => {
+  class Client extends EventEmitter {
+    connect() {
+      this.emit("ready");
+    }
+    end() {
+      this.emit("close");
+    }
+  }
+  const options = { host: "router", privateKey: "KEY", ClientClass: Client };
+  await expect(upload({ ...options, localPath: "", remotePath: "remote" })).rejects.toMatchObject({
+    code: "SSH_INVALID_OPTIONS",
+  });
+  await expect(download({ ...options, remotePath: "", localPath: "local" })).rejects.toMatchObject({
+    code: "SSH_INVALID_OPTIONS",
+  });
+});
+
 test("injects a logger and writes records without credentials or command text", async () => {
   const levels = ["error", "warn", "info", "http", "verbose", "debug", "silly"];
   const logger = Object.fromEntries(levels.map((level) => [level, jest.fn()]));
