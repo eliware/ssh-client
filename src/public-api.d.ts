@@ -1,9 +1,14 @@
+import type { LoggerWithConfiguredLevels } from "@eliware/log";
+
+export type { LoggerWithConfiguredLevels } from "@eliware/log";
+
 export type HostVerifier = (
   key: Buffer,
   verify?: (ok: boolean) => void,
 ) => boolean | void | Promise<boolean>;
 export interface SshConnectionOptions {
   host: string;
+  logger?: LoggerWithConfiguredLevels;
   port?: number;
   username?: string;
   privateKey?: string | Buffer;

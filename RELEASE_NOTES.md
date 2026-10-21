@@ -8,6 +8,7 @@
 - Group related source modules and tests in matching folders.
 - Align validation and workflow files with Eliware Test 14 conventions.
 - Add an opt-in integration example for SSH connections and SFTP transfers.
+- Add injectable structured logging with operation context and sensitive-value protection.
 - Document terminal options, host verification, authentication, commands, shells, file transfers, and errors.
 - Add the npm release workflow and update the Knit deployment commands.
 - Fix wording, validation messages, and test setup to follow shared language and test rules.

@@ -32,6 +32,7 @@ Read the [connection guide](connections.md) for connection use.
 | `password`       | SSH account password.                                                         |
 | `agent`          | SSH agent socket path.                                                        |
 | `connectTimeout` | Connection and authentication limit in milliseconds. Default: `10000`.        |
+| `logger`         | Optional structured logger for operation records.                             |
 | `hostVerifier`   | Custom host-key verifier function.                                            |
 | `knownHosts`     | OpenSSH known-host records as text.                                           |
 | `knownHostsPath` | Path to an OpenSSH known-host file.                                           |
@@ -42,6 +43,36 @@ Read the [connection guide](connections.md) for connection use.
 
 Set at least one host verification option when you use the default SSH client.
 Read [authentication and connections](connections.md) and [host verification](security.md).
+
+## Logging
+
+Install `@eliware/log` if you want its structured logger.
+Create a logger with `createLogger()` and pass it as the `logger` option.
+Pass the option to `connect()`, `sshExec()`, `upload()`, or `download()`.
+The connection uses the same logger for `exec()`, `shell()`, `upload()`, and `download()`.
+
+The client records the operation, host, and port.
+Command records include the command index, exit code, and time in milliseconds.
+Failure records include the error name, code, and operation phase when available.
+The client does not log credentials, command text, local paths, or remote paths.
+
+The logger supports `error`, `warn`, `info`, `http`, `verbose`, `debug`, and `silly` levels.
+Set the logger level to control which records it writes.
+
+```js
+import { createLogger } from "@eliware/log";
+import { connect } from "@eliware/ssh-client";
+
+const logger = createLogger({ format: "json", level: "info" });
+const ssh = await connect({
+  host: "router.example",
+  privateKeyPath: "~/.ssh/id_ed25519",
+  knownHostsPath: "~/.ssh/known_hosts",
+  logger,
+});
+```
+
+Do not put sensitive values in custom logger metadata.
 
 `createHostVerifier()` accepts `host`, `port`, `knownHosts`, `knownHostsPath`, and `hostCaPath`.
 Set `host` and at least one trusted record or CA source.

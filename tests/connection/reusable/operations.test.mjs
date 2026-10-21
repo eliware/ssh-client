@@ -49,6 +49,7 @@ test("runs open operations with their inputs and queue policy", async () => {
   const operations = createOperations(undefined, queued);
   const shellOptions = { terminal: "xterm" };
   await expect(operations.exec(["cmd"], { timeout: 1 })).resolves.toBe("exec");
+  await expect(operations.exec("invalid")).resolves.toBe("exec");
   await expect(operations.shell(shellOptions)).resolves.toBe("shell");
   await expect(operations.shell("invalid")).resolves.toBe("shell");
   await expect(operations.upload({ localPath: "a" })).resolves.toBe("upload");
@@ -58,7 +59,7 @@ test("runs open operations with their inputs and queue policy", async () => {
   expect(openShell).toHaveBeenNthCalledWith(2, "client", {});
   expect(reusableUpload).toHaveBeenCalledWith("client", { localPath: "a" });
   expect(reusableDownload).toHaveBeenCalledWith("client", { remotePath: "b" });
-  expect(queued).toHaveBeenCalledTimes(3);
+  expect(queued).toHaveBeenCalledTimes(4);
 });
 
 test("rejects operations when state is closed", async () => {
