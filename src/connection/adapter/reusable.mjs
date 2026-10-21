@@ -1,3 +1,6 @@
+import { signalReady } from "./signal-ready.mjs";
+import { stopClient } from "../transport/stop-client.mjs";
+
 export function createReusableClientAdapter(client) {
   return {
     on(...args) {
@@ -17,14 +20,10 @@ export function createReusableClientAdapter(client) {
       return this;
     },
     connect() {
-      client.emit?.("ready");
+      signalReady(client);
     },
     end() {
-      try {
-        client.end();
-      } catch {
-        client.destroy?.();
-      }
+      stopClient(client);
     },
     destroy() {
       client.destroy?.();

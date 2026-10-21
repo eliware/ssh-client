@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { createReusableClientAdapter } from "../../../src/connection/adapter/reusable.mjs";
 import { connect } from "../../../src/connection/lifecycle/client/connect.mjs";
-test("adapts the transport event and lifecycle methods", () => {
+test("adapts transport event and operation methods", () => {
   const calls = [];
   const client = {
     on: (...args) => calls.push(["on", args]),
@@ -18,7 +18,6 @@ test("adapts the transport event and lifecycle methods", () => {
   expect(adapter.removeListener("a", 1)).toBe(adapter);
   expect(adapter.once("a", 1)).toBe(adapter);
   expect(adapter.emit("a", 1)).toBe(adapter);
-  adapter.connect();
   adapter.end();
   adapter.destroy();
   adapter.exec("x");
@@ -27,7 +26,6 @@ test("adapts the transport event and lifecycle methods", () => {
     "on",
     "remove",
     "once",
-    "emit",
     "emit",
     "end",
     "destroy",

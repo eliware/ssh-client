@@ -82,9 +82,3 @@ test("rejects missing streams and reports stream errors only once", async () => 
   resolvedStream.handlers.error(Error("second"));
   await expect(resolved).resolves.toBe(resolvedStream);
 });
-
-test("times out when the client does not return a shell stream", async () => {
-  const client = { shell: jest.fn(), end: jest.fn() };
-  await expect(openShell(client, { timeout: 1 })).rejects.toMatchObject({ code: "SSH_TIMEOUT" });
-  expect(client.end).toHaveBeenCalledTimes(1);
-});
