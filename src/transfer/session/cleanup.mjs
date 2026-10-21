@@ -1,7 +1,6 @@
 export function closeSftp(sftp) {
   try {
-    sftp?.end?.();
-    return undefined;
+    return sftp?.end?.();
   } catch (error) {
     return error;
   }

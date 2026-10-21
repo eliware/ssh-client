@@ -19,3 +19,8 @@ test("closes SFTP and returns synchronous close errors", () => {
     }),
   ).toMatchObject({ message: "close" });
 });
+
+test("returns the SFTP end result", () => {
+  const result = Promise.resolve();
+  expect(closeSftp({ end: () => result })).toBe(result);
+});

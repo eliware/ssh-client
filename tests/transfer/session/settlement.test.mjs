@@ -51,3 +51,47 @@ test("does not settle or clean up an already settled transfer", () => {
   expect(resolve).not.toHaveBeenCalled();
   expect(reject).not.toHaveBeenCalled();
 });
+
+test("rejects when asynchronous SFTP cleanup fails", async () => {
+  const resolve = jest.fn();
+  const reject = jest.fn();
+  const closeError = Error("async close");
+  settleTransfer({
+    state: { settled: false },
+    cleanup: jest.fn(),
+    sftp: {},
+    operation: "upload",
+    result: "ok",
+    closeSftp: () => Promise.reject(closeError),
+    normalizeTransferError,
+    resolve,
+    reject,
+  });
+  await Promise.resolve();
+  expect(resolve).not.toHaveBeenCalled();
+  expect(reject).toHaveBeenCalledWith(
+    expect.objectContaining({
+      code: "SSH_SFTP",
+      context: { operation: "upload", phase: "cleanup" },
+    }),
+  );
+});
+
+test("waits for successful asynchronous SFTP cleanup", async () => {
+  const resolve = jest.fn();
+  const reject = jest.fn();
+  settleTransfer({
+    state: { settled: false },
+    cleanup: jest.fn(),
+    sftp: {},
+    operation: "download",
+    result: "ok",
+    closeSftp: () => Promise.resolve(),
+    normalizeTransferError,
+    resolve,
+    reject,
+  });
+  await Promise.resolve();
+  expect(resolve).toHaveBeenCalledWith("ok");
+  expect(reject).not.toHaveBeenCalled();
+});

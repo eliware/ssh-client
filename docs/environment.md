@@ -44,8 +44,8 @@ Use placeholder values in documentation and keep credentials in a secret store.
 | `SSH_CLIENT_INTEGRATION_USER`        | Unset.                         | Yes when enabled.                                             | `operator`                   |
 | `SSH_CLIENT_INTEGRATION_PRIVATE_KEY` | Unset.                         | Required when no password is set.                             | `/path/to/id_ed25519`        |
 | `SSH_CLIENT_INTEGRATION_PASSWORD`    | Unset.                         | Required when no private key path is set.                     | `REPLACE_WITH_SECRET`        |
-| `SSH_CLIENT_INTEGRATION_KNOWN_HOSTS` | Unset.                         | Required when no CA path is set.                              | `/path/to/known_hosts`       |
-| `SSH_CLIENT_INTEGRATION_CA`          | Unset.                         | Required when no known-hosts path is set.                     | `/path/to/host-ca.pub`       |
+| `SSH_CLIENT_INTEGRATION_KNOWN_HOSTS` | Unset.                         | Required for ordinary server host keys.                       | `/path/to/known_hosts`       |
+| `SSH_CLIENT_INTEGRATION_CA`          | Unset.                         | Required when the server presents a host certificate.         | `/path/to/host-ca.pub`       |
 | `SSH_CLIENT_INTEGRATION_PORT`        | `22`.                          | No.                                                           | `2222`                       |
 | `SSH_CLIENT_INTEGRATION_TRANSPORT`   | The built-in SSH client.       | No.                                                           | `/path/to/custom-client.mjs` |
 | `SSH_CLIENT_INTEGRATION_REMOTE_PATH` | A generated file under `/tmp`. | No.                                                           | `/tmp/ssh-client-check.txt`  |
