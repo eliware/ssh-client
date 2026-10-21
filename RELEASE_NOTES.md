@@ -1,12 +1,16 @@
 # Release Notes
 
-## 13.0.0 — 2026-10-17
+## 14.0.0 — 2026-10-21
 
 ### Changed
 
-- Group related source and test files in matching folders.
-- Set package metadata to version 13.0.0.
+- Set package metadata to version 14.0.0 and update the shared test package to 14.0.0.
+- Group related source modules and tests in matching folders.
+- Align validation and workflow files with Eliware Test 14 conventions.
+- Add an opt-in integration example for SSH connections and SFTP transfers.
+- Document terminal options, host verification, authentication, commands, shells, file transfers, and errors.
 - Add the npm release workflow and update the Knit deployment commands.
+- Fix wording, validation messages, and test setup to follow shared language and test rules.
 
 ## 12.0.0 — 2026-10-12
 
