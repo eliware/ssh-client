@@ -6,7 +6,7 @@ test("selects explicit key paths before fallback sources", () => {
   expect(selectKeySources({ privateKeyPath: "/key", homedirFn: () => "/home" })).toEqual(["/key"]);
 });
 
-test("selects configured and default home key paths", () => {
+test("selects fallback key sources", () => {
   const previous = process.env.SSH_PRIVATE_KEY_PATH;
   process.env.SSH_PRIVATE_KEY_PATH = "/env-key";
   try {
