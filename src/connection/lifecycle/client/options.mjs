@@ -18,7 +18,6 @@ export async function prepareConnection(options = {}) {
   const connectTimeout = defaultConnectionTimeout(options.connectTimeout);
   validateConnectionOptions(
     { ...options, host, port, connectTimeout, ClientClass },
-    Client,
     connectTimeout,
   );
   const security = await prepareConnectionSecurity(options, Client);

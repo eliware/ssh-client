@@ -1,5 +1,15 @@
 # Release Notes
 
+## 15.0.1 — 2026-10-26
+
+### Changed
+
+- Set the package version to 15.0.1.
+- Update `@eliware/log` and `@eliware/test` to 15.0.1.
+- Refresh the lockfile with current compatible dependency versions.
+- Move host-verification policy and error-context creation into focused modules.
+- Keep connection validation focused on host, port, and timeout values.
+
 ## 15.0.0 — 2026-10-21
 
 ### Added

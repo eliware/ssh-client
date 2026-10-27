@@ -33,13 +33,3 @@ test("uses the configured known-host source for the default verifier", async () 
     jest.useRealTimers();
   }
 });
-
-test("requires a verifier or trust source for the default client", () => {
-  expect(() =>
-    prepareHostVerification({ clientIsDefault: true, requireVerification: true }),
-  ).toThrow("host verification");
-});
-
-test("rejects a non-function custom verifier", () => {
-  expect(() => prepareHostVerification({ hostVerifier: "bad" })).toThrow("hostVerifier");
-});

@@ -16,40 +16,17 @@ test("rejects invalid connection ports and timeouts", async () => {
   });
 });
 
-test("validates host, verifier, port, timeout, and host verification policy", () => {
-  const Client = class {};
+test("validates host, port, and timeout", () => {
   expect(() =>
-    validateConnectionOptions(
-      { host: "router", ClientClass: class {}, hostVerifier: () => true },
-      Client,
-      100,
-    ),
+    validateConnectionOptions({ host: "router", ClientClass: class {} }, 100),
   ).not.toThrow();
-  expect(() => validateConnectionOptions({}, Client, 100)).toThrow("host");
-  expect(() =>
-    validateConnectionOptions(
-      { host: "router", hostVerifier: "invalid", ClientClass: class {} },
-      Client,
-      100,
-    ),
-  ).toThrow("hostVerifier");
+  expect(() => validateConnectionOptions({}, 100)).toThrow("host");
   for (const port of [0, 65536, 1.5])
     expect(() =>
-      validateConnectionOptions(
-        { host: "router", ClientClass: class {}, hostVerifier: () => true, port },
-        Client,
-        100,
-      ),
+      validateConnectionOptions({ host: "router", ClientClass: class {}, port }, 100),
     ).toThrow("TCP endpoint number");
   for (const timeout of [0, Number.NaN, Infinity, -1, "fast"])
     expect(() =>
-      validateConnectionOptions(
-        { host: "router", ClientClass: class {}, hostVerifier: () => true },
-        Client,
-        timeout,
-      ),
+      validateConnectionOptions({ host: "router", ClientClass: class {} }, timeout),
     ).toThrow("connectTimeout");
-  expect(() =>
-    validateConnectionOptions({ host: "router", ClientClass: Client }, Client, 100),
-  ).toThrow("host verification");
 });

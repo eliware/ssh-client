@@ -1,6 +1,6 @@
 {
   "name": "@eliware/ssh-client",
-  "version": "15.0.0",
+  "version": "15.0.1",
   "type": "module",
   "description": "An ESM-first Node.js SSH client with host-key checks, long-lived connections, command execution, interactive shells, and SFTP transfers.",
   "keywords": [
@@ -43,11 +43,11 @@
     "node": ">=26"
   },
   "dependencies": {
-    "@eliware/log": "^15.0.0",
+    "@eliware/log": "^15.0.1",
     "@eliware/ssh2": "^1.17.0"
   },
   "devDependencies": {
-    "@eliware/test": "^15.0.0",
+    "@eliware/test": "^15.0.1",
     "typescript": "^7.0.2"
   },
   "jest": {

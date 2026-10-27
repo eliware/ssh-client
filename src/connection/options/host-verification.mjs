@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import ssh2 from "@eliware/ssh2";
 import { createHostVerifier } from "../../security/known-hosts/verification/verifier.mjs";
 import { adaptHostVerifier } from "../../exec/options/adapt-host-verifier.mjs";
+import { validateHostVerificationPolicy } from "./verification-policy.mjs";
 
 const { utils } = ssh2;
 
@@ -18,17 +19,14 @@ export function prepareHostVerification({
   requireVerification = false,
   clientIsDefault = false,
 }) {
-  if (hostVerifier !== undefined && typeof hostVerifier !== "function")
-    throw new Error("hostVerifier must be a function");
-  if (
-    clientIsDefault &&
-    requireVerification &&
-    !hostVerifier &&
-    !knownHosts &&
-    !knownHostsPath &&
-    !hostCaPath
-  )
-    throw new Error("host verification configuration is required");
+  validateHostVerificationPolicy({
+    hostVerifier,
+    knownHosts,
+    knownHostsPath,
+    hostCaPath,
+    requireVerification,
+    clientIsDefault,
+  });
   return adaptHostVerifier(
     hostVerifier ||
       createHostVerifier({
